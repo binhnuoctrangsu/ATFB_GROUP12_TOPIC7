@@ -3,43 +3,40 @@ src/data.py
 ===========
 Stage 1 — Data acquisition and cleaning for ATFB Group 12, Topic 7.
 
-Pull pipeline (all fresh, no pre-existing data files):
-  1. VNINDEX & HNX-Index daily closes   → vnstock  → data/raw/vnindex_raw.csv, hnxindex_raw.csv
+Pull pipeline (all fresh, no pre-existing data files are read):
+  1. VN-Index & HNX-Index daily closes  → vnstock   → data/raw/vnindex_raw.csv, data/raw/hnxindex_raw.csv
   2. USD/VND exchange rate              → yfinance  → data/raw/usdvnd_raw.csv
   3. Brent (or WTI) crude oil price     → yfinance  → data/raw/oil_raw.csv
-  4. US 10-Year Treasury yield          → FRED      → data/raw/dgs10_raw.csv
+  4. US 10-Year Treasury yield (DGS10)  → FRED      → data/raw/dgs10_raw.csv
 
 Then:
-  5. Build market-cap-weighted composite VN equity return series.
-  6. Align all four series on Vietnamese trading days (inner join).
-  7. Report missingness, forward-fill DGS10 gaps (documented), flag large VN moves.
-  8. Save cleaned panel to data/processed/panel.csv and log levels to data/processed/log_levels.csv.
+  5. Align all series on the Vietnamese trading-day calendar
+     (inner join for USD/VND and oil; forward-fill for DGS10 only).
+  6. Compute log returns on the aligned panel and build the market-cap-weighted
+     composite VN equity return (fixed start-of-sample weights, see config.py).
+  7. Flag single-day VN index moves larger than 7%.
+  8. Save data/processed/panel.csv, data/processed/log_levels.csv and
+     data/processed/alignment_report.csv.
 
-Run as a standalone script (from the repo root):
+Run as a standalone script (from anywhere):
     python src/data.py
-Or import functions from the notebook.
+The script is idempotent: it recreates data/raw/ and data/processed/ from scratch.
 """
 
 import sys
 import os
+import warnings
+from io import StringIO
 from pathlib import Path
 
-# ------------------------------------------------------------------
-# Always run from the repo root so relative paths are correct.
-# ------------------------------------------------------------------
-_HERE = Path(__file__).resolve().parent.parent
-if Path.cwd() != _HERE:
-    os.chdir(_HERE)
-
-import warnings
 import numpy as np
 import pandas as pd
 
-warnings.filterwarnings("ignore")
+_REPO = Path(__file__).resolve().parent.parent
+sys.path.insert(0, str(_REPO))
+import config  # noqa: E402
 
-# Import project config (adds repo root to sys.path if needed)
-sys.path.insert(0, str(_HERE))
-import config
+warnings.filterwarnings("ignore")
 
 
 # ===========================================================================
@@ -48,287 +45,253 @@ import config
 
 def _pull_vnstock_index(symbol: str, start: str, end: str) -> pd.Series:
     """
-    Pull daily closing price of a Vietnamese index (VNINDEX or HNXINDEX)
-    using the vnstock library (Thinh Vu, https://github.com/thinh-vu/vnstock).
+    Daily closing level of a Vietnamese index via vnstock (Thinh Vu,
+    https://github.com/thinh-vu/vnstock).
 
-    Returns a pd.Series indexed by date (tz-naive).
-
-    Strategy:
-      - Try the modern vnstock 4.x API first (Vnstock().stock(...).quote.history(...)).
-      - Fall back to the legacy vnstock 3.x API (stock_historical_data).
+    This project uses vnstock legacy 0.2.9.2.3 (git branch `legacy`): newer releases
+    (vnstock3 3.x, vnstock 4.x) depend on the package `vnai`, which is not installable
+    from PyPI in this environment. Legacy API:
+        stock_historical_data(symbol, start_date, end_date, resolution, type)
+    with type="index". Index symbols per the library docstring: VNINDEX, HNX, ...
     """
-    # ---- Attempt legacy vnstock API (vnstock legacy 0.2.x branch) ----
-    # This project uses vnstock legacy (0.2.9.2.3) installed from the @legacy branch
-    # of https://github.com/thinh-vu/vnstock because newer versions (3.x, 4.x)
-    # require `vnai` which is not available on PyPI.
-    # API: stock_historical_data(symbol, start_date, end_date, resolution, type)
-    #   type = "index"  for index-level data (VNINDEX, HNXINDEX)
-    #   type = "stock"  for individual ticker data
     try:
-        from vnstock import stock_historical_data as shd  # type: ignore
-        df = shd(symbol, start, end, "1D", "index")
-        # 'time' column holds date strings, 'close' holds the closing level
-        idx = pd.to_datetime(df["time"].str[:10])
-        s = df["close"].values
-        return pd.Series(s, index=idx, name=symbol)
-    except Exception as e_legacy:
-        raise RuntimeError(
-            f"[data.py] Cannot pull {symbol} via vnstock legacy. Error: {e_legacy}\n"
-            "Install: pip install git+https://github.com/thinh-vu/vnstock.git@legacy"
-        )
+        from vnstock import stock_historical_data  # type: ignore
+    except ImportError as e:
+        raise ImportError(
+            "vnstock is not installed. Install with:\n"
+            "  pip install git+https://github.com/thinh-vu/vnstock.git@legacy"
+        ) from e
+
+    try:
+        df = stock_historical_data(symbol, start, end, "1D", "index")
+    except Exception as e:
+        raise RuntimeError(f"[data] vnstock failed to return {symbol}: {e}") from e
+    if df is None or len(df) == 0:
+        raise RuntimeError(f"[data] vnstock returned no rows for {symbol}.")
+
+    df = df.dropna(subset=["close"])
+    idx = pd.to_datetime(df["time"].astype(str).str[:10])
+    return pd.Series(df["close"].astype(float).values, index=idx, name=symbol).sort_index()
 
 
 def pull_vn_indices(start: str = config.START_DATE,
                     end: str = config.END_DATE) -> tuple[pd.Series, pd.Series]:
-    """
-    Pull VNINDEX and HNXINDEX daily closing prices via vnstock.
-
-    Returns (vnindex_close, hnxindex_close) as pd.Series indexed by trading date.
-    Both are saved to data/raw/.
-    """
-    print("[data] Pulling VNINDEX from vnstock …")
-    vni = _pull_vnstock_index("VNINDEX", start, end)
-    vni.index = pd.to_datetime(vni.index)
-    vni = vni.sort_index().dropna()
+    """Pull VN-Index and HNX-Index closes; save each raw pull to data/raw/."""
+    print("[data] Pulling VN-Index (vnstock symbol "
+          f"'{config.VN_SYMBOL_HOSE}') …")
+    vni = _pull_vnstock_index(config.VN_SYMBOL_HOSE, start, end).rename("VNINDEX")
+    vni.index.name = "date"
     vni.to_csv(config.DATA_RAW / "vnindex_raw.csv", header=True)
-    print(f"       VNINDEX: {len(vni)} rows, {vni.index[0].date()} → {vni.index[-1].date()}")
+    print(f"       VNINDEX : {len(vni)} rows, {vni.index[0].date()} → {vni.index[-1].date()}")
 
-    print("[data] Pulling HNXINDEX from vnstock …")
-    hnx = _pull_vnstock_index("HNXINDEX", start, end)
-    hnx.index = pd.to_datetime(hnx.index)
-    hnx = hnx.sort_index().dropna()
+    print(f"[data] Pulling HNX-Index (vnstock symbol '{config.VN_SYMBOL_HNX}') …")
+    hnx = _pull_vnstock_index(config.VN_SYMBOL_HNX, start, end).rename("HNXINDEX")
+    hnx.index.name = "date"
     hnx.to_csv(config.DATA_RAW / "hnxindex_raw.csv", header=True)
     print(f"       HNXINDEX: {len(hnx)} rows, {hnx.index[0].date()} → {hnx.index[-1].date()}")
-
     return vni, hnx
 
 
 # ===========================================================================
-# 2. USD/VND exchange rate via yfinance
+# 2-3. Yahoo Finance series (USD/VND, oil)
 # ===========================================================================
+
+def _yf_close(ticker: str, start: str, end: str) -> pd.Series:
+    import yfinance as yf  # type: ignore
+    raw = yf.download(ticker, start=start, end=end, auto_adjust=True,
+                      progress=False, threads=False)
+    if raw is None or len(raw) == 0:
+        raise RuntimeError(f"[data] yfinance returned no rows for {ticker}.")
+    close = raw["Close"]
+    if isinstance(close, pd.DataFrame):
+        close = close.iloc[:, 0]
+    close.index = pd.to_datetime(close.index).tz_localize(None)
+    close.index.name = "date"
+    return close.sort_index()
+
 
 def pull_usdvnd(start: str = config.START_DATE,
                 end: str = config.END_DATE) -> pd.Series:
-    """
-    Pull USD/VND daily closing price using yfinance ticker USDVND=X.
-    Saved to data/raw/usdvnd_raw.csv.
-    """
-    import yfinance as yf  # type: ignore
+    """USD/VND daily close (yfinance `USDVND=X`); raw pull saved to data/raw/."""
     print(f"[data] Pulling USD/VND ({config.YF_USDVND}) from Yahoo Finance …")
-    raw = yf.download(config.YF_USDVND, start=start, end=end,
-                      auto_adjust=True, progress=False)
-    close = raw["Close"].squeeze()
-    close.index = pd.to_datetime(close.index).tz_localize(None)
-    close.name = "USDVND"
-    close = close.sort_index().dropna()
-    close.to_csv(config.DATA_RAW / "usdvnd_raw.csv", header=True)
-    print(f"       USD/VND: {len(close)} rows, {close.index[0].date()} → {close.index[-1].date()}")
-    return close
+    s = _yf_close(config.YF_USDVND, start, end).rename("USDVND")
+    s.to_csv(config.DATA_RAW / "usdvnd_raw.csv", header=True)
+    s = s.dropna()
+    print(f"       USDVND  : {len(s)} rows, {s.index[0].date()} → {s.index[-1].date()}")
+    return s
 
 
-# ===========================================================================
-# 3. Brent (or WTI) crude oil via yfinance
-# ===========================================================================
+def _gap_fraction(s: pd.Series, start: str, end: str) -> float:
+    """Share of weekdays in [first obs, end] with no valid observation."""
+    wd = pd.bdate_range(max(pd.Timestamp(start), s.dropna().index[0]),
+                        min(pd.Timestamp(end), s.dropna().index[-1]))
+    return 1.0 - s.dropna().index.isin(wd).sum() / len(wd)
+
 
 def pull_oil(start: str = config.START_DATE,
-             end: str = config.END_DATE) -> tuple[pd.Series, str]:
+             end: str = config.END_DATE) -> tuple[pd.Series, str, float]:
     """
-    Pull Brent crude (BZ=F) daily closing price using yfinance.
-    If Brent has more than OIL_MAX_GAP_FRAC missing observations, fall back to WTI (CL=F).
+    Brent front-month futures (yfinance `BZ=F`). If more than OIL_MAX_GAP_FRAC of
+    weekdays are missing, fall back to WTI (`CL=F`) and flag the substitution.
 
-    Returns (series, ticker_used).
-    Saved to data/raw/oil_raw.csv.
+    Returns (series, ticker_used, brent_gap_fraction). Raw pull saved to data/raw/.
     """
-    import yfinance as yf  # type: ignore
-
-    def _dl(ticker):
-        raw = yf.download(ticker, start=start, end=end,
-                          auto_adjust=True, progress=False)
-        s = raw["Close"].squeeze()
-        s.index = pd.to_datetime(s.index).tz_localize(None)
-        s = s.sort_index()
-        return s
-
-    print(f"[data] Pulling Brent crude ({config.YF_BRENT}) from Yahoo Finance …")
-    brent = _dl(config.YF_BRENT)
-    brent_na_frac = brent.isna().mean()
-
-    if brent_na_frac > config.OIL_MAX_GAP_FRAC:
-        # TODO: flag this substitution prominently in the notebook
-        print(f"       WARNING: Brent has {brent_na_frac:.1%} missing values "
-              f"(threshold {config.OIL_MAX_GAP_FRAC:.0%}). Falling back to WTI ({config.YF_WTI}).")
-        oil = _dl(config.YF_WTI).rename("OIL_WTI")
-        ticker_used = config.YF_WTI
+    print(f"[data] Pulling Brent ({config.YF_BRENT}) from Yahoo Finance …")
+    brent = _yf_close(config.YF_BRENT, start, end)
+    gap = _gap_fraction(brent, start, end)
+    print(f"       Brent missing on {gap:.2%} of weekdays "
+          f"(fallback threshold {config.OIL_MAX_GAP_FRAC:.0%}).")
+    if gap > config.OIL_MAX_GAP_FRAC:
+        print(f"       *** SUBSTITUTION: Brent gaps exceed threshold; using WTI ({config.YF_WTI}). ***")
+        oil, ticker = _yf_close(config.YF_WTI, start, end), config.YF_WTI
     else:
-        oil = brent.rename("OIL_BRENT")
-        ticker_used = config.YF_BRENT
-
+        oil, ticker = brent, config.YF_BRENT
+    oil = oil.rename("OIL")
+    out = oil.to_frame()
+    out["ticker"] = ticker
+    out.to_csv(config.DATA_RAW / "oil_raw.csv")
     oil = oil.dropna()
-    oil.to_csv(config.DATA_RAW / "oil_raw.csv", header=True)
-    print(f"       Oil ({ticker_used}): {len(oil)} rows, {oil.index[0].date()} → {oil.index[-1].date()}")
-    return oil, ticker_used
+    print(f"       OIL     : {len(oil)} rows ({ticker}), {oil.index[0].date()} → {oil.index[-1].date()}")
+    return oil, ticker, gap
 
 
 # ===========================================================================
-# 4. US 10-Year Treasury yield via FRED / pandas_datareader
+# 4. US 10-Year Treasury yield via FRED
 # ===========================================================================
 
 def pull_dgs10(start: str = config.START_DATE,
                end: str = config.END_DATE) -> pd.Series:
     """
-    Pull the US 10-Year Treasury Constant Maturity Rate (DGS10) from FRED.
-
-    Primary method: pandas_datareader FRED reader.
-    Fallback: direct FRED CSV download via requests.
-
-    Saved to data/raw/dgs10_raw.csv.
-    Note: DGS10 only has one value per US business day; gaps are forward-filled
-    in the alignment step (documented in align_panel).
+    FRED DGS10 (10-Year Treasury Constant Maturity Rate, % p.a.).
+    Primary: pandas_datareader; fallback: FRED's own CSV endpoint (same series, same
+    publisher — not a different data source). Pulled with a 14-day buffer before
+    `start` so that forward-filling has a value for the first VN trading day.
     """
-    import pandas_datareader.data as web  # type: ignore
-
-    print(f"[data] Pulling DGS10 from FRED via pandas_datareader …")
+    buf_start = (pd.Timestamp(start) - pd.Timedelta(days=14)).strftime("%Y-%m-%d")
+    print(f"[data] Pulling {config.FRED_US10Y} from FRED …")
     try:
-        df = web.DataReader(config.FRED_US10Y, "fred", start, end)
-        dgs10 = df[config.FRED_US10Y].squeeze()
-    except Exception as e_pdr:
-        # Fallback: FRED direct CSV
-        print(f"       pandas_datareader failed ({e_pdr}). Trying direct FRED CSV download …")
+        import pandas_datareader.data as web  # type: ignore
+        s = web.DataReader(config.FRED_US10Y, "fred", buf_start, end)[config.FRED_US10Y]
+        method = "pandas_datareader"
+    except Exception as e:
+        print(f"       pandas_datareader failed ({e}); using FRED CSV endpoint.")
         import requests
-        url = (
-            f"https://fred.stlouisfed.org/graph/fredgraph.csv"
-            f"?id={config.FRED_US10Y}&vintage_date={end[:10]}"
-        )
-        resp = requests.get(url, timeout=30)
-        resp.raise_for_status()
-        from io import StringIO
-        df = pd.read_csv(StringIO(resp.text), parse_dates=["DATE"], index_col="DATE")
-        dgs10 = df.iloc[:, 0]
-        dgs10 = dgs10.loc[start:end]
-
-    dgs10.index = pd.to_datetime(dgs10.index).tz_localize(None)
-    dgs10.name = "DGS10"
-    # FRED uses "." for missing; convert to NaN
-    dgs10 = pd.to_numeric(dgs10, errors="coerce")
-    dgs10 = dgs10.sort_index().dropna()
-    dgs10.to_csv(config.DATA_RAW / "dgs10_raw.csv", header=True)
-    print(f"       DGS10: {len(dgs10)} rows, {dgs10.index[0].date()} → {dgs10.index[-1].date()}")
-    return dgs10
+        url = f"https://fred.stlouisfed.org/graph/fredgraph.csv?id={config.FRED_US10Y}"
+        txt = requests.get(url, timeout=60).text
+        df = pd.read_csv(StringIO(txt))
+        df.columns = ["date", config.FRED_US10Y]
+        s = df.set_index(pd.to_datetime(df["date"]))[config.FRED_US10Y].loc[buf_start:end]
+        method = "FRED CSV"
+    s = pd.to_numeric(s, errors="coerce").rename("DGS10")
+    s.index = pd.to_datetime(s.index)
+    s.index.name = "date"
+    s.to_csv(config.DATA_RAW / "dgs10_raw.csv", header=True)
+    n_na = int(s.isna().sum())
+    s = s.dropna()
+    print(f"       DGS10   : {len(s)} rows via {method} ({n_na} FRED blanks = US holidays), "
+          f"{s.index[0].date()} → {s.index[-1].date()}")
+    return s
 
 
 # ===========================================================================
-# 5. Build composite VN equity return series
+# 5-6. Align on VN calendar, compute returns and composite
 # ===========================================================================
 
-def build_composite(vni: pd.Series, hnx: pd.Series) -> pd.DataFrame:
+def align_panel(vni: pd.Series, hnx: pd.Series, usdvnd: pd.Series,
+                oil: pd.Series, dgs10: pd.Series,
+                start: str = config.START_DATE) -> tuple[pd.DataFrame, pd.DataFrame]:
     """
-    Construct the market-cap-weighted composite Vietnamese equity return series.
+    Reference calendar: days on which BOTH VN-Index and HNX-Index trade (VN side).
+      * USD/VND and oil: INNER JOIN — a VN trading day is dropped if there is no
+        same-date USD/VND or oil quote (e.g. US/UK holidays for Brent). We do not
+        forward-fill these because they are traded prices and a stale price would
+        create artificial zero returns.
+      * DGS10: FORWARD-FILLED onto VN trading days. DGS10 is published once per US
+        business day and moves in small steps; a VN trading day that is a US holiday
+        carries the previous US business day's yield. (Flagged per the brief.)
+    Returns are computed AFTER alignment, so every return spans the same pair of
+    dates for all four variables.
 
-    composite_return_t = W_HOSE * VNINDEX_return_t + W_HNX * HNXINDEX_return_t
-
-    Weights are fixed at the start of the sample (see config.py for source).
-    Both index series are first aligned to their common trading days (inner join),
-    then log returns are computed.
-
-    Returns a DataFrame with columns:
-        VNINDEX, HNXINDEX,  r_VNINDEX, r_HNXINDEX, r_composite
-    and DatetimeIndex of common Vietnamese trading days.
+    Returns (panel, alignment_report).
     """
-    # Align the two VN indices on their common trading days
-    df = pd.concat([vni.rename("VNINDEX"), hnx.rename("HNXINDEX")], axis=1).dropna()
-    df.index = pd.to_datetime(df.index)
+    vni = vni.loc[start:]
+    hnx = hnx.loc[start:]
+    vn = pd.concat([vni, hnx], axis=1)
+    vn_days = vn.dropna().index
+    report = {}
+    report["VNINDEX"]  = {"raw obs in window": len(vni)}
+    report["HNXINDEX"] = {"raw obs in window": len(hnx)}
+    report["VNINDEX"]["not on common VN calendar"]  = int(vni.index.difference(vn_days).size)
+    report["HNXINDEX"]["not on common VN calendar"] = int(hnx.index.difference(vn_days).size)
 
-    # Log returns (%)
-    df["r_VNINDEX"]  = 100 * np.log(df["VNINDEX"]  / df["VNINDEX"].shift(1))
-    df["r_HNXINDEX"] = 100 * np.log(df["HNXINDEX"] / df["HNXINDEX"].shift(1))
+    # Weekday gaps on the VN side (Tết and public holidays)
+    wd = pd.bdate_range(vn_days[0], vn_days[-1])
+    vn_holidays = wd.difference(vn_days)
+    print(f"\n[data] VN common calendar: {len(vn_days)} trading days; "
+          f"{len(vn_holidays)} weekdays closed (Tết / public holidays).")
 
-    # Composite return
-    df["r_composite"] = (config.W_HOSE * df["r_VNINDEX"] +
-                         config.W_HNX  * df["r_HNXINDEX"])
+    panel = vn.loc[vn_days].copy()
+    for name, s in [("USDVND", usdvnd), ("OIL", oil)]:
+        s_win = s.loc[vn_days[0]:vn_days[-1]]
+        missing_on_vn = vn_days.difference(s_win.index)
+        report[name] = {
+            "raw obs in window": len(s_win),
+            "VN days with no quote (dropped)": int(len(missing_on_vn)),
+            "obs on non-VN days (unused)": int(s_win.index.difference(vn_days).size),
+        }
+        panel[name] = s.reindex(vn_days)
 
-    df = df.dropna()
-    return df
+    d_win = dgs10.loc[vn_days[0]:vn_days[-1]]
+    d_on_vn = dgs10.reindex(vn_days)
+    n_ffill = int(d_on_vn.isna().sum())
+    # Forward-fill DGS10 (only this series) — see docstring
+    panel["DGS10"] = dgs10.reindex(dgs10.index.union(vn_days)).ffill().reindex(vn_days)
+    report["DGS10"] = {
+        "raw obs in window": len(d_win),
+        "VN days forward-filled": n_ffill,
+        "obs on non-VN days (unused)": int(d_win.index.difference(vn_days).size),
+    }
 
-
-# ===========================================================================
-# 6. Align all four series on Vietnamese trading days
-# ===========================================================================
-
-def align_panel(composite_df: pd.DataFrame,
-                usdvnd: pd.Series,
-                oil: pd.Series,
-                dgs10: pd.Series) -> pd.DataFrame:
-    """
-    Inner-join all four series on Vietnamese trading days.
-
-    Reference calendar = VN equity trading days (from composite_df).
-    USD/VND, oil, and DGS10 may have fewer or different trading days;
-    we merge on the VN calendar and forward-fill DGS10 gaps (which occur on
-    US holidays not on VN holidays).
-
-    Reports missingness counts before and after alignment.
-
-    Returns a cleaned DataFrame with columns:
-        r_composite, r_VNINDEX, VNINDEX, HNXINDEX,
-        log_VNINDEX, log_HNXINDEX, log_composite_px (synthetic),
-        USDVND, log_USDVND,
-        OIL (Brent or WTI), log_OIL,
-        DGS10 (%, level)
-    """
-    # Reindex each series to VN trading days (forward-fill where needed)
-    vn_days = composite_df.index
-
-    # USD/VND: forward-fill gaps (FX markets mostly open on VN trading days;
-    # any gaps are national holidays in one market only)
-    usdvnd_aligned = usdvnd.reindex(vn_days, method="ffill")
-
-    # Oil: forward-fill gaps (US/Western holidays vs VN calendar)
-    oil_aligned = oil.reindex(vn_days, method="ffill")
-
-    # DGS10: forward-fill gaps — DGS10 changes slowly (one value/US business day)
-    # so forward-filling across VN holidays is well-justified.
-    dgs10_aligned = dgs10.reindex(vn_days, method="ffill")
-
-    # Report missingness
-    print("\n[data] Missingness BEFORE alignment (against VN trading-day calendar):")
-    for name, series, raw in [
-        ("USD/VND",  usdvnd_aligned, usdvnd),
-        ("Oil",      oil_aligned,    oil),
-        ("DGS10",    dgs10_aligned,  dgs10),
-    ]:
-        raw_in_window = raw.loc[raw.index >= vn_days[0]]
-        na_before = usdvnd_aligned.isna().sum() if name == "USD/VND" else (
-                    oil_aligned.isna().sum() if name == "Oil" else dgs10_aligned.isna().sum())
-        print(f"  {name}: {len(raw_in_window)} raw obs in window, "
-              f"{na_before} NaN after reindex (before ffill)")
-
-    # Build panel
-    panel = composite_df[["r_composite", "r_VNINDEX", "VNINDEX", "HNXINDEX"]].copy()
-    panel["USDVND"] = usdvnd_aligned
-    panel["OIL"]    = oil_aligned
-    panel["DGS10"]  = dgs10_aligned
-
-    # Drop any residual NaNs (inner join)
-    n_before = len(panel)
+    n0 = len(panel)
+    print("[data] Missing values on VN calendar BEFORE inner join:")
+    print(panel.isna().sum().to_string())
     panel = panel.dropna()
-    n_dropped = n_before - len(panel)
-    print(f"\n[data] Rows before dropna: {n_before}, after: {len(panel)}, dropped: {n_dropped}")
+    print(f"[data] Inner join: {n0} → {len(panel)} rows ({n0 - len(panel)} VN days dropped).")
+    print("[data] Missing values AFTER alignment:", int(panel.isna().sum().sum()))
 
-    # Log levels
-    panel["log_VNINDEX"]  = np.log(panel["VNINDEX"])
-    panel["log_HNXINDEX"] = np.log(panel["HNXINDEX"])
-    panel["log_USDVND"]   = np.log(panel["USDVND"])
-    panel["log_OIL"]      = np.log(panel["OIL"])
-    # DGS10 stays in level (already in % p.a.)
+    # ---- Log levels ----
+    for c in ["VNINDEX", "HNXINDEX", "USDVND", "OIL"]:
+        panel[f"log_{c}"] = np.log(panel[c])
 
-    # First-difference of DGS10 for use in VAR (DGS10 is I(1))
-    panel["d_DGS10"] = panel["DGS10"].diff()
+    # ---- Returns (%), computed on the aligned calendar ----
+    panel["r_VNINDEX"]  = 100 * panel["log_VNINDEX"].diff()
+    panel["r_HNXINDEX"] = 100 * panel["log_HNXINDEX"].diff()
+    panel["r_USDVND"]   = 100 * panel["log_USDVND"].diff()
+    panel["r_OIL"]      = 100 * panel["log_OIL"].diff()
+    panel["d_DGS10"]    = panel["DGS10"].diff()          # percentage points
 
-    # Log returns of USDVND and OIL (%)
-    panel["r_USDVND"] = 100 * panel["log_USDVND"].diff()
-    panel["r_OIL"]    = 100 * panel["log_OIL"].diff()
+    # ---- Composite (fixed start-of-sample market-cap weights, config.py) ----
+    panel["r_composite"] = config.W_HOSE * panel["r_VNINDEX"] + config.W_HNX * panel["r_HNXINDEX"]
+    # Composite log level (base 100 on the first day) for cointegration tests
+    panel["log_composite"] = np.log(100) + (panel["r_composite"].fillna(0) / 100).cumsum()
+    panel["COMPOSITE"] = np.exp(panel["log_composite"])
 
-    return panel
+    panel = panel.iloc[1:]  # first row has no returns
+
+    # ---- Calendar-gap diagnostic ----
+    # Number of weekdays skipped between consecutive panel dates. Non-zero values come
+    # from (i) VN holidays / Tết, (ii) VN days dropped by the inner join (no oil or FX
+    # quote), or (iii) days missing from the vnstock provider. A return on such a row
+    # spans more than one trading day — for ALL four variables, since returns are
+    # computed after alignment.
+    d = panel.index.values.astype("datetime64[D]")
+    prev = np.concatenate([[vn_days[0].to_datetime64().astype("datetime64[D]")], d[:-1]])
+    panel["weekdays_skipped"] = np.busday_count(prev, d) - 1
+    panel.loc[panel.index[0], "weekdays_skipped"] = 0
+
+    report_df = pd.DataFrame(report).T
+    report_df.loc["FINAL PANEL", "raw obs in window"] = len(panel)
+    return panel, report_df
 
 
 # ===========================================================================
@@ -338,86 +301,80 @@ def align_panel(composite_df: pd.DataFrame,
 def flag_large_moves(panel: pd.DataFrame,
                      threshold: float = config.VN_CIRCUIT_BREAKER) -> pd.DataFrame:
     """
-    Flag and print any day where |r_VNINDEX| or |r_HNXINDEX| (log-return %) exceeds
-    the HOSE/HNX circuit-breaker limit (7%).  Such moves are potential data errors.
-
-    Returns a DataFrame of flagged rows for inspection.  The caller decides whether
-    to drop them (see note in notebook).
+    Days on which |simple return| of VN-Index or HNX-Index exceeds `threshold` (7%).
+    Returned for inspection; nothing is dropped here (decision recorded in notebook).
     """
-    r_vni = panel["r_VNINDEX"]
-    r_hnx = 100 * np.log(panel["HNXINDEX"] / panel["HNXINDEX"].shift(1))
+    simple = pd.DataFrame({
+        "VNINDEX ret": np.expm1(panel["r_VNINDEX"] / 100),
+        "HNXINDEX ret": np.expm1(panel["r_HNXINDEX"] / 100),
+    })
+    mask = (simple.abs() > threshold).any(axis=1)
+    out = pd.concat([panel.loc[mask, ["VNINDEX", "HNXINDEX"]], simple.loc[mask]], axis=1)
+    print(f"[data] Single-day VN index moves > {threshold:.0%}: {int(mask.sum())}")
+    return out
 
-    limit_pct = threshold * 100
-    flagged_vni = panel[r_vni.abs() > limit_pct]
-    flagged_hnx = panel[r_hnx.abs() > limit_pct]
 
-    print(f"\n[data] VN moves > {threshold:.0%} (potential data errors or circuit-breaker events):")
-    if len(flagged_vni):
-        print(f"  VNINDEX ({len(flagged_vni)} days):")
-        print(flagged_vni[["VNINDEX", "r_VNINDEX"]].to_string())
-    else:
-        print("  VNINDEX: none")
-
-    if len(flagged_hnx):
-        print(f"  HNXINDEX ({len(flagged_hnx)} days):")
-        print(r_hnx[r_hnx.abs() > limit_pct].to_frame("r_HNXINDEX").to_string())
-    else:
-        print("  HNXINDEX: none")
-
-    return pd.concat([flagged_vni, flagged_hnx]).drop_duplicates()
+def calendar_gaps(panel: pd.DataFrame, raw_vn: pd.Series, min_skipped: int = 1) -> pd.DataFrame:
+    """
+    Rows whose return spans `min_skipped` or more skipped weekdays, with the list of
+    skipped weekdays and whether each skipped day exists in the raw VN-Index pull
+    (if it does, the day was dropped by the inner join, not missing at source).
+    """
+    rows = []
+    idx = panel.index
+    for i in np.where(panel["weekdays_skipped"].values >= min_skipped)[0]:
+        if i == 0:
+            continue
+        skipped = pd.bdate_range(idx[i - 1], idx[i])[1:-1]
+        in_raw = skipped.isin(raw_vn.index)
+        rows.append({"date": idx[i], "previous obs": idx[i - 1].date(),
+                     "weekdays skipped": len(skipped),
+                     "skipped (VN closed / missing at source)": ", ".join(
+                         d.strftime("%m-%d") for d, r in zip(skipped, in_raw) if not r),
+                     "skipped (dropped by inner join)": ", ".join(
+                         d.strftime("%m-%d") for d, r in zip(skipped, in_raw) if r)})
+    return pd.DataFrame(rows).set_index("date") if rows else pd.DataFrame()
 
 
 # ===========================================================================
-# 8. Main pipeline — save processed data
+# 8. Main pipeline
 # ===========================================================================
 
-def run_pipeline(start: str = config.START_DATE,
-                 end: str = config.END_DATE) -> pd.DataFrame:
-    """
-    Run the full data-acquisition and cleaning pipeline.
+def run_pipeline(start: str = config.START_DATE, end: str = config.END_DATE) -> dict:
+    """Run the full pull + clean pipeline; returns a dict of outputs."""
+    # Fresh run: remove previous outputs so the pipeline is idempotent
+    for d in (config.DATA_RAW, config.DATA_PROC):
+        d.mkdir(parents=True, exist_ok=True)
+        for f in d.glob("*.csv"):
+            f.unlink()
 
-    Saves:
-      data/raw/vnindex_raw.csv, hnxindex_raw.csv, usdvnd_raw.csv, oil_raw.csv, dgs10_raw.csv
-      data/processed/panel.csv       — full cleaned panel (returns + levels + log levels)
-      data/processed/log_levels.csv  — log-price levels for cointegration tests
-
-    Returns the cleaned panel DataFrame.
-    """
-    # ----- Pull raw data -----
     vni, hnx = pull_vn_indices(start, end)
-    usdvnd    = pull_usdvnd(start, end)
-    oil, oil_ticker = pull_oil(start, end)
-    dgs10     = pull_dgs10(start, end)
+    usdvnd = pull_usdvnd(start, end)
+    oil, oil_ticker, brent_gap = pull_oil(start, end)
+    dgs10 = pull_dgs10(start, end)
 
-    # ----- Build composite -----
-    composite_df = build_composite(vni, hnx)
+    panel, report = align_panel(vni, hnx, usdvnd, oil, dgs10, start)
+    flagged = flag_large_moves(panel)
+    gaps = calendar_gaps(panel, vni)
+    print(f"[data] Rows whose return spans ≥1 skipped weekday: {len(gaps)}; "
+          f"≥3 skipped weekdays: {int((panel['weekdays_skipped'] >= 3).sum())}.")
 
-    # ----- Align on VN trading days -----
-    panel = align_panel(composite_df, usdvnd, oil, dgs10)
-
-    # ----- Flag large moves -----
-    _ = flag_large_moves(panel)
-
-    # ----- Save -----
     panel.to_csv(config.DATA_PROC / "panel.csv")
-    log_levels = panel[["log_VNINDEX", "log_HNXINDEX", "log_USDVND", "log_OIL", "DGS10"]]
-    log_levels.to_csv(config.DATA_PROC / "log_levels.csv")
+    panel[["log_composite", "log_VNINDEX", "log_USDVND", "log_OIL", "DGS10"]].to_csv(
+        config.DATA_PROC / "log_levels.csv")
+    report.to_csv(config.DATA_PROC / "alignment_report.csv")
 
-    print(f"\n[data] ✓ Pipeline complete.")
-    print(f"       Final sample: {len(panel)} observations")
-    print(f"       Period: {panel.index[0].date()} → {panel.index[-1].date()}")
-    print(f"       Oil series used: {oil_ticker}")
-    print(f"       Composite weights: W_HOSE = {config.W_HOSE:.4f}, W_HNX = {config.W_HNX:.4f}")
-    print(f"       Files saved to data/raw/ and data/processed/")
+    print(f"\n[data] Pipeline complete. Final sample: {len(panel)} observations, "
+          f"{panel.index[0].date()} → {panel.index[-1].date()}; oil = {oil_ticker}; "
+          f"W_HOSE = {config.W_HOSE:.4f}, W_HNX = {config.W_HNX:.4f}.")
+    return {"panel": panel, "report": report, "flagged": flagged, "gaps": gaps,
+            "oil_ticker": oil_ticker, "brent_gap": brent_gap,
+            "raw": {"VNINDEX": vni, "HNXINDEX": hnx, "USDVND": usdvnd,
+                    "OIL": oil, "DGS10": dgs10}}
 
-    return panel
-
-
-# ===========================================================================
-# Script entry point
-# ===========================================================================
 
 if __name__ == "__main__":
-    panel = run_pipeline()
-    print("\nPanel tail:")
-    print(panel[["r_composite", "r_VNINDEX", "USDVND", "OIL", "DGS10"]].tail())
+    out = run_pipeline()
+    print("\nAlignment report:\n", out["report"].to_string())
+    print("\nPanel tail:\n", out["panel"][["r_composite", "r_VNINDEX", "r_USDVND",
+                                           "r_OIL", "d_DGS10"]].tail())

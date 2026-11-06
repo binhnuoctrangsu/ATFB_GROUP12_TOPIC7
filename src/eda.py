@@ -1,229 +1,119 @@
 """
 src/eda.py
 ==========
-Stage 2 — Exploratory data analysis functions for ATFB Group 12, Topic 7.
+Stage 2 — Exploratory data analysis.
 
-Provides:
-  summarise()         — summary statistics table (mean, vol, skew, kurtosis, JB p-value)
-  unit_root_table()   — ADF + KPSS on levels and returns for all series
-  acf_plots()         — ACF of returns and squared returns
-  lb_arch_table()     — Ljung-Box and ARCH-LM tests
-  qq_plots()          — Q-Q plots against normal distribution
-  plot_prices()       — price-level and return time-series plots
+  summarise()      — summary statistics + Jarque-Bera
+  unit_root_table()— ADF + KPSS on levels and on returns / first differences
+  acf_plots()      — ACF of returns and squared returns
+  lb_arch_table()  — Ljung-Box and ARCH-LM tests
+  qq_plots()       — normal Q-Q plots
+  plot_prices()    — level and return plots
 """
+
+import warnings
 
 import numpy as np
 import pandas as pd
 import matplotlib.pyplot as plt
-import matplotlib.gridspec as gridspec
 from scipy import stats
 from statsmodels.tsa.stattools import adfuller, kpss
 from statsmodels.stats.diagnostic import acorr_ljungbox, het_arch
 from statsmodels.graphics.tsaplots import plot_acf
 
-import sys
-from pathlib import Path
-sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
-import config
 
-
-# ---------------------------------------------------------------------------
-# Summary statistics
-# ---------------------------------------------------------------------------
-
-def summarise(returns: pd.DataFrame, ann_factor: float = 252) -> pd.DataFrame:
-    """
-    Summary statistics for a DataFrame of daily log returns (in %).
-
-    Returns a DataFrame with one row per series and columns:
-        obs, mean (% p.a.), vol (% p.a.), skewness, excess kurtosis,
-        min (%), max (%), JB stat, JB p-value
-    """
-    rows = {}
-    for col in returns.columns:
-        x = returns[col].dropna()
-        jb = stats.jarque_bera(x)
-        rows[col] = {
-            "obs":               len(x),
-            "mean (% p.a.)":     x.mean() * ann_factor,
-            "vol (% p.a.)":      x.std() * np.sqrt(ann_factor),
-            "skewness":          float(x.skew()),
-            "excess kurtosis":   float(x.kurt()),
-            "min (%)":           float(x.min()),
-            "max (%)":           float(x.max()),
-            "JB stat":           jb.statistic,
-            "JB p-value":        jb.pvalue,
-        }
-    return pd.DataFrame(rows).T
-
-
-# ---------------------------------------------------------------------------
-# Unit-root tests
-# ---------------------------------------------------------------------------
-
-def _unit_root_one(x: pd.Series) -> pd.Series:
-    """ADF + KPSS for a single series."""
-    adf = adfuller(x.dropna(), autolag="AIC")
-    kp  = kpss(x.dropna(), regression="c", nlags="auto")
-    return pd.Series({
-        "ADF stat": adf[0],
-        "ADF p":    adf[1],
-        "KPSS stat": kp[0],
-        "KPSS p":    kp[1],
+def summarise(r: pd.DataFrame, ann: int = 252) -> pd.DataFrame:
+    """Summary statistics of daily returns / changes (adapted from the course template)."""
+    return pd.DataFrame({
+        "obs": r.count(),
+        "mean (daily)": r.mean(),
+        "std (daily)": r.std(),
+        "mean (ann.)": r.mean() * ann,
+        "vol (ann.)": r.std() * np.sqrt(ann),
+        "skewness": r.skew(),
+        "excess kurtosis": r.kurt(),
+        "min": r.min(),
+        "max": r.max(),
+        "JB stat": r.apply(lambda x: stats.jarque_bera(x.dropna()).statistic),
+        "JB p-value": r.apply(lambda x: stats.jarque_bera(x.dropna()).pvalue),
     })
 
 
-def unit_root_table(panel: pd.DataFrame) -> pd.DataFrame:
-    """
-    Run ADF and KPSS on:
-      • log levels of all four series
-      • returns / first differences of all four series
-
-    Returns a MultiIndex DataFrame (outer: level/return, inner: series name).
-    """
-    series_map = {
-        "log_VNINDEX":  ("log level", "return"),
-        "log_USDVND":   ("log level", "return"),
-        "log_OIL":      ("log level", "return"),
-        "DGS10":        ("level",     "first diff"),
-    }
-    # Map series names to their return counterparts
-    ret_map = {
-        "log_VNINDEX": "r_composite",
-        "log_USDVND":  "r_USDVND",
-        "log_OIL":     "r_OIL",
-        "DGS10":       "d_DGS10",
-    }
-
-    level_rows, return_rows = {}, {}
-    for lev_col, (lev_label, ret_label) in series_map.items():
-        if lev_col in panel.columns:
-            level_rows[lev_col] = _unit_root_one(panel[lev_col])
-        ret_col = ret_map[lev_col]
-        if ret_col in panel.columns:
-            return_rows[ret_col] = _unit_root_one(panel[ret_col].dropna())
-
-    df_lev = pd.DataFrame(level_rows).T
-    df_ret = pd.DataFrame(return_rows).T
-    return pd.concat({"log levels / levels": df_lev, "returns / first diffs": df_ret})
+def _unit_root(x: pd.Series) -> pd.Series:
+    """ADF (H0: unit root) and KPSS (H0: level-stationary), constant only."""
+    x = x.dropna()
+    adf = adfuller(x, autolag="AIC")
+    with warnings.catch_warnings():
+        warnings.simplefilter("ignore")  # KPSS p-values are truncated to [0.01, 0.10]
+        kp = kpss(x, regression="c", nlags="auto")
+    i0 = (adf[1] < 0.05) and (kp[1] > 0.05)
+    i1 = (adf[1] >= 0.05) and (kp[1] <= 0.05)
+    return pd.Series({"ADF stat": adf[0], "ADF p": adf[1], "ADF lags": adf[2],
+                      "KPSS stat": kp[0], "KPSS p": kp[1],
+                      "verdict": "stationary" if i0 else ("unit root" if i1 else "mixed")})
 
 
-# ---------------------------------------------------------------------------
-# ACF plots
-# ---------------------------------------------------------------------------
+def unit_root_table(levels: pd.DataFrame, changes: pd.DataFrame) -> pd.DataFrame:
+    """ADF + KPSS on levels and on the corresponding returns / first differences."""
+    return pd.concat({"levels": levels.apply(_unit_root).T,
+                      "returns / differences": changes.apply(_unit_root).T})
 
-def acf_plots(returns: pd.DataFrame, lags: int = 20,
-              save_path=None) -> plt.Figure:
-    """
-    Two-row ACF plot grid: returns (top) and squared returns (bottom),
-    one column per series.
-    """
-    n = len(returns.columns)
-    fig, axes = plt.subplots(2, n, figsize=(4 * n, 5))
-    if n == 1:
-        axes = axes.reshape(2, 1)
 
-    for j, col in enumerate(returns.columns):
-        x = returns[col].dropna()
-        plot_acf(x,      lags=lags, ax=axes[0, j], title=f"ACF: {col} returns")
-        plot_acf(x ** 2, lags=lags, ax=axes[1, j], title=f"ACF: {col}² (volatility clustering)")
-
-    plt.tight_layout()
+def acf_plots(r: pd.DataFrame, lags: int = 20, save_path=None):
+    n = r.shape[1]
+    fig, ax = plt.subplots(2, n, figsize=(3.6 * n, 5.5))
+    for j, c in enumerate(r):
+        x = r[c].dropna()
+        plot_acf(x, lags=lags, ax=ax[0, j], zero=False, title=f"ACF: {c}")
+        plot_acf(x ** 2, lags=lags, ax=ax[1, j], zero=False, title=f"ACF: {c}²")
+    fig.tight_layout()
     if save_path:
         fig.savefig(save_path, dpi=150, bbox_inches="tight")
     return fig
 
 
-# ---------------------------------------------------------------------------
-# Ljung-Box and ARCH-LM table
-# ---------------------------------------------------------------------------
-
-def lb_arch_table(returns: pd.DataFrame, lags: int = 10) -> pd.DataFrame:
-    """
-    Ljung-Box (10) and ARCH-LM (10) p-values for each return series.
-    """
+def lb_arch_table(r: pd.DataFrame, lags: int = 10) -> pd.DataFrame:
     rows = {}
-    for col in returns.columns:
-        x = returns[col].dropna()
-        lb_ret = acorr_ljungbox(x,      lags=[lags])["lb_pvalue"].iloc[0]
-        lb_sq  = acorr_ljungbox(x ** 2, lags=[lags])["lb_pvalue"].iloc[0]
-        arch   = het_arch(x - x.mean(), nlags=lags)[1]
-        rows[col] = {
-            f"LB({lags}) p, returns":        lb_ret,
-            f"LB({lags}) p, squared returns": lb_sq,
-            f"ARCH-LM({lags}) p":             arch,
-        }
+    for c in r:
+        x = r[c].dropna()
+        rows[c] = {f"LB({lags}) stat": acorr_ljungbox(x, lags=[lags])["lb_stat"].iloc[0],
+                   f"LB({lags}) p": acorr_ljungbox(x, lags=[lags])["lb_pvalue"].iloc[0],
+                   f"LB({lags}) p, squared": acorr_ljungbox(x ** 2, lags=[lags])["lb_pvalue"].iloc[0],
+                   f"ARCH-LM({lags}) stat": het_arch(x - x.mean(), nlags=lags)[0],
+                   f"ARCH-LM({lags}) p": het_arch(x - x.mean(), nlags=lags)[1]}
     return pd.DataFrame(rows).T
 
 
-# ---------------------------------------------------------------------------
-# Q-Q plots
-# ---------------------------------------------------------------------------
-
-def qq_plots(returns: pd.DataFrame, save_path=None) -> plt.Figure:
-    """
-    Q-Q plots of each return series against the normal distribution.
-    """
-    n = len(returns.columns)
-    fig, axes = plt.subplots(1, n, figsize=(4 * n, 4))
-    if n == 1:
-        axes = [axes]
-
-    for ax, col in zip(axes, returns.columns):
-        x = returns[col].dropna()
-        stats.probplot(x, dist="norm", plot=ax)
-        ax.set_title(f"Q-Q: {col}")
-
-    plt.tight_layout()
+def qq_plots(r: pd.DataFrame, save_path=None):
+    n = r.shape[1]
+    fig, ax = plt.subplots(1, n, figsize=(3.6 * n, 3.6))
+    for a, c in zip(np.atleast_1d(ax), r):
+        x = r[c].dropna()
+        stats.probplot((x - x.mean()) / x.std(), dist="norm", plot=a)
+        a.set_title(f"Normal Q-Q: {c}")
+        a.get_lines()[0].set_markersize(2.5)
+    fig.tight_layout()
     if save_path:
         fig.savefig(save_path, dpi=150, bbox_inches="tight")
     return fig
 
 
-# ---------------------------------------------------------------------------
-# Price-level and return time-series plots
-# ---------------------------------------------------------------------------
-
-def plot_prices(panel: pd.DataFrame, save_path=None) -> plt.Figure:
-    """
-    Two-panel figure: (top) normalised price/level series, (bottom) return series.
-    """
-    fig, axes = plt.subplots(2, 1, figsize=(12, 7))
-
-    # Top: normalised levels
-    ax = axes[0]
-    for col, label in [
-        ("VNINDEX", "VNINDEX (rebased)"),
-        ("USDVND",  "USD/VND (rebased)"),
-        ("OIL",     "Oil (rebased)"),
-    ]:
-        s = panel[col] / panel[col].iloc[0]
-        ax.plot(s.index, s.values, label=label, lw=0.8)
-    ax.set_ylabel("Index (first day = 1)")
-    ax.set_title("Normalised price levels")
-    ax.legend(loc="upper left", fontsize=8)
-
-    # DGS10 on a secondary y-axis
-    ax2 = ax.twinx()
-    ax2.plot(panel.index, panel["DGS10"].values, color="grey", lw=0.8,
-             alpha=0.6, label="DGS10 (%, right)")
-    ax2.set_ylabel("US 10Y yield (%)", color="grey")
-    ax2.tick_params(axis="y", labelcolor="grey")
-
-    # Bottom: returns
-    ax = axes[1]
-    for col, label in [
-        ("r_composite", "Composite VN equity return"),
-        ("r_USDVND",    "USD/VND return"),
-        ("r_OIL",       "Oil return"),
-        ("d_DGS10",     "ΔUS 10Y (% pts)"),
-    ]:
-        ax.plot(panel.index, panel[col].values, label=label, lw=0.5, alpha=0.7)
-    ax.set_ylabel("Daily return / change (%)")
-    ax.set_title("Daily return series")
-    ax.legend(loc="upper left", fontsize=8)
-
-    plt.tight_layout()
+def plot_prices(panel: pd.DataFrame, save_path=None):
+    """Four level panels (top) and four return panels (bottom)."""
+    lv = [("COMPOSITE", "Composite VN equity (base 100)"), ("USDVND", "USD/VND"),
+          ("OIL", "Brent crude (USD/bbl)"), ("DGS10", "US 10Y yield (%)")]
+    rt = [("r_composite", "Composite return (%)"), ("r_USDVND", "USD/VND return (%)"),
+          ("r_OIL", "Oil return (%)"), ("d_DGS10", "Δ US 10Y (pp)")]
+    fig, ax = plt.subplots(2, 4, figsize=(15, 6))
+    for a, (c, t) in zip(ax[0], lv):
+        a.plot(panel.index, panel[c], lw=0.8)
+        a.set_title(t)
+    for a, (c, t) in zip(ax[1], rt):
+        a.plot(panel.index, panel[c], lw=0.4)
+        a.set_title(t)
+    for a in ax.ravel():
+        a.tick_params(axis="x", labelrotation=45, labelsize=7)
+    fig.tight_layout()
     if save_path:
         fig.savefig(save_path, dpi=150, bbox_inches="tight")
     return fig
