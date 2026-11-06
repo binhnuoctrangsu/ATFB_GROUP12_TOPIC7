@@ -1,0 +1,23 @@
+# ATFB Group 12, Topic 7 — Python dependencies
+# Install: pip install -r requirements.txt
+# Python 3.11+
+#
+# vnstock (legacy 0.2.9.2.3) is installed from the upstream git repo:
+#   pip install git+https://github.com/thinh-vu/vnstock.git@legacy
+# because it is not on PyPI and later versions require a private dependency (vnai).
+# See docs/references.md for the rationale.
+
+numpy>=2.0
+pandas>=2.2
+scipy>=1.13
+matplotlib>=3.9
+statsmodels>=0.14
+arch>=7.0
+yfinance>=1.0
+pandas-datareader>=0.11
+# vnstock: install separately (see note above)
+# pip install git+https://github.com/thinh-vu/vnstock.git@legacy
+
+# Notebook execution
+ipykernel
+nbformat>=5.9
