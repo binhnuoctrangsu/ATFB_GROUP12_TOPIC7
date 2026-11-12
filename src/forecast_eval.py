@@ -65,23 +65,77 @@ def rw_forecast(y: pd.Series, n_test: int = config.N_TEST) -> pd.Series:
     return pd.Series(0.0, index=y.index[-n_test:], name="Random walk")
 
 
+def rolling_var_fixed_lag_forecast(data: pd.DataFrame, target: str, p: int = 2,
+                                   window: int = config.ROLL_WINDOW,
+                                   refit: int = config.ROLL_REFIT,
+                                   n_test: int = config.N_TEST) -> pd.Series:
+    """Rolling VAR(p) with fixed lag order p; 1-step-ahead forecasts (no look-ahead)."""
+    n, j_t = len(data), list(data.columns).index(target)
+    X = data.values
+    fc = {}
+    for i in range(n - n_test, n, refit):
+        est = data.iloc[i - window:i]
+        res = VAR(est).fit(p)
+        for t in range(i, min(i + refit, n)):
+            fc[data.index[t]] = res.forecast(X[t - p:t], steps=1)[0, j_t]
+    return pd.Series(fc, name=f"VAR({p})")
+
+
 def score_table(actual: pd.Series, forecasts: dict) -> pd.DataFrame:
+    """
+    Out-of-sample evaluation table:
+      * RMSE, MAE
+      * RMSE / RMSE(RW)
+      * OOS R2 vs RW (%): Campbell & Thompson (2008, RFS) out-of-sample R^2
+            R^2_OOS = 100 * (1 - MSE_model / MSE_RW)
+      * DA (%): Directional accuracy (100 * share of test days where sign(fc) == sign(actual);
+        for the zero-drift Random Walk where fc == 0, defined as the non-negative base rate
+        100 * mean(actual >= 0)).
+    """
     rows = {}
+    mse_rw = None
+    if "Random walk" in forecasts:
+        f_rw = forecasts["Random walk"]
+        e_rw = actual.loc[f_rw.index] - f_rw
+        mse_rw = float((e_rw ** 2).mean())
+
     for k, f in forecasts.items():
-        e = actual.loc[f.index] - f
-        rows[k] = {"RMSE": float(np.sqrt((e ** 2).mean())), "MAE": float(e.abs().mean()),
-                   "N": int(len(e))}
+        y_al = actual.loc[f.index]
+        e = y_al - f
+        mse = float((e ** 2).mean())
+        rmse = float(np.sqrt(mse))
+        mae = float(e.abs().mean())
+        if np.all(f.values == 0.0):
+            da = float(100.0 * np.mean(y_al.values >= 0.0))
+        else:
+            da = float(100.0 * np.mean(np.sign(f.values) == np.sign(y_al.values)))
+        oos_r2 = float(100.0 * (1.0 - mse / mse_rw)) if (mse_rw is not None and mse_rw > 0) else np.nan
+        rows[k] = {
+            "RMSE": rmse,
+            "MAE": mae,
+            "RMSE / RMSE(RW)": np.nan,
+            "OOS R2 vs RW (%)": oos_r2,
+            "DA (%)": da,
+            "N": int(len(e)),
+        }
     out = pd.DataFrame(rows).T
-    out["RMSE / RMSE(RW)"] = out["RMSE"] / out.loc["Random walk", "RMSE"] if "Random walk" in out.index else np.nan
+    if "Random walk" in out.index:
+        out["RMSE / RMSE(RW)"] = out["RMSE"] / out.loc["Random walk", "RMSE"]
     return out
 
 
 def diebold_mariano(actual: pd.Series, fc_a: pd.Series, fc_b: pd.Series,
                     h: int = 1, loss: str = "mse") -> dict:
     """
-    DM test of equal predictive accuracy, HLN (1997) small-sample correction, t(n-1)
-    reference distribution. d_t = L(e_a) - L(e_b): a negative statistic means model
-    A has the lower loss.
+    Diebold-Mariano (1995) test of equal predictive accuracy with the Harvey, Leybourne
+    & Newbold (1997) small-sample correction and Student-t(n-1) reference distribution.
+    d_t = L(e_a) - L(e_b): a negative statistic means model A has the lower loss.
+
+    Methodological note on nested models: because all competing models are estimated on a
+    fixed-length rolling window (ROLL_WINDOW = 750) rather than an expanding window,
+    parameter estimation error does not vanish asymptotically, so the unconditional
+    predictive-ability test of Giacomini & White (2006, Econometrica 74(6), 1545-1578)
+    validates standard normal / Student-t asymptotic inference even when models are nested.
     """
     idx = fc_a.index.intersection(fc_b.index)
     ea, eb = (actual.loc[idx] - fc_a.loc[idx]).values, (actual.loc[idx] - fc_b.loc[idx]).values

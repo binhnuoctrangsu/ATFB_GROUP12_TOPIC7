@@ -24,24 +24,29 @@ This manifest records the exact provenance, pull timestamps, row counts, date ra
 | `usdvnd_raw.csv` | `USDVND=X` (USD/VND spot rate) | `yfinance` | `2026-11-12T23:15:10.877851` | `1,670` | `2020-06-01` → `2026-10-30` | `33,577` | `97b628889725f214b193bb7d30c6d3399b1596075d506968d67f0f766d449e36` |
 | `oil_raw.csv` | `BZ=F` (Brent crude front-month futures, USD/bbl) | `yfinance` | `2026-11-12T23:15:11.289713` | `1,617` | `2020-06-01` → `2026-10-30` | `55,888` | `67f9290c2d8d85e911528fc3de14fb598fdf8a11a6d449e3a6ea2da21a8178f6` |
 | `dgs10_raw.csv` | `DGS10` (10-Year US Treasury Constant Maturity Rate, % p.a.) | `FRED` (`pandas_datareader`) | `2026-11-12T23:15:12.322547` | `1,615` (`+70` US holiday `NaN`s in raw file) | `2020-05-18` → `2026-10-30` | `28,238` | `9992fa67a00ba8548247a3af834d0ebcb71f40deef64cc831aa92545de54e4c5` |
+| `vnindex_ext2016_raw.csv` | `VNINDEX` (Extended 10-year Stage 6 check) | `vnstock` (`type="index"`) | `2026-11-13T00:40:58.288646` | `2,461` | `2016-11-01` → `2026-10-30` | `48,080` | `9446584a8c7911fb67dd12263672872dec36d23a7c5b4698035b8c69cb97546e` |
+| `usdvnd_ext2016_raw.csv` | `USDVND=X` (Extended 10-year Stage 6 check) | `yfinance` | `2026-11-13T00:41:01.678070` | `2,598` | `2016-11-01` → `2026-10-30` | `52,778` | `0bac08656a2dc7e9ac8085228e5999959c4620e8162749855cc5d6a7912d7f6f` |
+| `oil_ext2016_raw.csv` | `BZ=F` (Extended 10-year Stage 6 check) | `yfinance` | `2026-11-13T00:41:02.179397` | `2,520` | `2016-11-01` → `2026-10-30` | `74,453` | `396da3ffb709e85924e24c5563230ae32947603126c2f8519c2a46489a6ae53c` |
+| `dgs10_ext2016_raw.csv` | `DGS10` (Extended 10-year Stage 6 check) | `FRED` (`pandas_datareader`) | `2026-11-13T00:41:03.363714` | `2,509` | `2016-10-18` → `2026-10-30` | `43,874` | `2e10e0bebef240c2d1a9308fe0bbba1cbf43fdbaf987b58190bb8481f412ec2b` |
 
 ---
 
 ## 3. Processed Panel Files (`data/processed/*.csv`)
 
-Generated deterministically from `data/raw/*.csv` by `src.data.align_panel()`:
+Generated deterministically from `data/raw/*.csv` by `src.data.align_panel()` and `src.data.align_vnindex_only_panel()`:
 - `data/processed/panel.csv`: `1,527` aligned daily return observations (`2020-06-02` → `2026-10-30`), `0` missing values across all columns (`VNINDEX`, `HNXINDEX`, `USDVND`, `OIL`, `DGS10`, `log_*`, `r_*`, `d_DGS10`, `r_composite`, `log_composite`, `COMPOSITE`, `weekdays_skipped`, `after_provider_gap`).
 - `data/processed/log_levels.csv`: `1,527` rows of aligned log levels (`log_composite`, `log_VNINDEX`, `log_USDVND`, `log_OIL`, `DGS10`).
 - `data/processed/alignment_report.csv`: Summary of raw counts, forward-filled observations (`59` for `DGS10`), and inner-join drops (`48` VN trading days).
+- `data/processed/panel_ext2016.csv`: `2,384` aligned daily return observations (`2016-11-02` → `2026-10-30`) for the extended 10-year `VNINDEX`-only robustness check.
 
 ---
 
 ## 4. Local Archival Snapshot (Outside Git Repository)
 
-Because `vnstock` data are licensed for study and research use only and must not be published in a public git repository, `data/raw/` and `data/processed/` are excluded via `.gitignore`. An offline snapshot archive of the five raw CSV files above is stored locally outside the repository at:
+Because `vnstock` data are licensed for study and research use only and must not be published in a public git repository, `data/raw/` and `data/processed/` are excluded via `.gitignore`. An offline snapshot archive of all nine raw CSV files above is stored locally outside the repository at:
 
 - **Archive path:** `D:\ANTIGRAVITY\GROUP\SNAPSHOTS\data_raw_snapshot.zip`
-- **Archive size:** `41,867` bytes
-- **Archive SHA-256:** `a4e9eed9f0e9beb5f174a72cb0cd63aac48d56c9caf64c1faeb885f30749e836`
+- **Archive size:** `92,513` bytes
+- **Archive SHA-256:** `4abda199c6bbc55258ccd16bcc95baca19d8d10734d4395e8f7cf904c0751a37`
 
 *(Note: For the official course submission on Microsoft Teams, `make_submission.py` bundles the code and data files into `D:\ANTIGRAVITY\GROUP\ATFB_Essay_Group12_code.zip` per the ATFB Midterm Brief submission rules.)*

@@ -25,3 +25,24 @@ All significant architectural, methodological, data-validation, and editorial ch
   - Added explicit `var <= 0` guard in `diebold_mariano()` (`A-05`).
 - `requirements.txt`:
   - Pinned `vnstock` to its exact verified commit SHA `e8339514ad7cd757259d3f1b797bca379f93606a`, documented the Python version (`3.13.3`), and justified every package (`A-06`, `A-07`). Retained `arch==8.0.0` for the Phase 2(f) Student-$t$ $\text{GARCH}(1,1)$ residual diagnostic.
+
+---
+
+## [Phase 2] — 2026-11-13 — Econometric Methodology Enhancements, Robustness Suite & Single Source of Truth
+
+### Added
+- **2(a) Cholesky Ordering Sensitivity & Generalized IRFs (`src/var_model.py`):**
+  - Implemented Pesaran & Shin (1998) order-invariant Generalized Impulse Response Functions (`girf_matrix`, `girf_response_table`) and reversed VN-first Cholesky ordering (`r_VN -> r_USDVND -> r_OIL -> dUS10Y`, motivated by HOSE/HNX closing at 08:00 GMT prior to London/NY sessions). Saved `results/tables/tab27a_var_irf_r_VN_reversed.csv`, `results/tables/tab27b_var_girf_r_VN.csv`, and `results/figures/fig09_var_irf_ordering_girf.png`.
+- **2(b) Comprehensive Granger Robustness Suite (`src/var_model.py`):**
+  - Implemented `granger_robust_pair()` with exact QR-projected Rademacher Wild Bootstrap ($B = 2,000$, seed `42`), White HC3, and Newey–West HAC (`maxlags = p`) Wald tests, plus `bonferroni_holm_adjust()` and `granger_multitest_table()`.
+  - Saved `results/tables/tab28_granger_robustness_lags_gaps.csv` ($\Delta\text{US10Y} \to r_{\text{VN}}$ across lags $p \in \{1, 2, 3, 5, 10\}$ on full sample vs. excluding the 10 return rows following the 28 `vnstock` provider gaps) and `results/tables/tab29_granger_12pairs_robust_multitest.csv` (all 12 directed pairs in $\text{VAR}(5)$ with Bonferroni and Holm adjustments).
+- **2(c) Extended 10-Year VN-Index-Only Check (`src/data.py`, `src/var_model.py`):**
+  - Added `pull_extended_2016()` and `align_vnindex_only_panel()` to pull and align `VNINDEX`, `USDVND=X`, `BZ=F`, and `DGS10` over the full 10-year window `2016-11-02` to `2026-10-30` ($N = 2,384$). Saved `results/tables/tab30_extended_vnindex_2016_2026.csv`.
+- **2(d) Subsample Stability Analysis (`src/var_model.py`):**
+  - Evaluated $\text{VAR}(5)$ and $\text{VAR}(1)$ Granger causality and IRFs across two regime splits: (1) Pandemic & 2022 Fed tightening (`2020-06`–`2022-12`, $N = 605$) vs. Post-2022 normalization (`2023-01`–`2026-10`, $N = 922$), and (2) SBV $\pm 3\%$ USD/VND trading band (`2020-06`–`2022-10-14`, $N = 552$) vs. SBV $\pm 5\%$ band (`2022-10-17`–`2026-10`, $N = 975$). Saved `results/tables/tab31_subsample_stability.csv` and `results/figures/fig10_subsample_irf_stability.png`.
+- **2(e) Out-of-Sample Forecast Evaluation Enhancements (`src/forecast_eval.py`):**
+  - Added Campbell & Thompson (2008) out-of-sample $R^2_{\text{OOS}}$ (`OOS R2 vs RW (%)`), Directional Accuracy (`DA (%)`), fixed-lag rolling $\text{VAR}(1)$, $\text{VAR}(2)$, $\text{VAR}(5)$ comparisons (`tab33_oos_forecast_extended.csv`), and Giacomini & White (2006) justification for fixed-window Diebold–Mariano tests on nested models. Updated `results/tables/tab19_forecast_scores.csv`.
+- **2(f) $\text{VAR}(5)$ Residual $\text{GARCH}(1,1)$-$t$ Check (`src/var_model.py`):**
+  - Implemented `fit_var_resid_garch()` using `arch==8.0.0`, confirming that Student-$t$ $\text{GARCH}(1,1)$ ($\alpha_1 + \beta_1 = 0.9368, \hat{\nu} = 4.25$) and $\text{GJR-GARCH}(1,1)$-$t$ ($\gamma_1 = 0.3496$) completely absorb the conditional heteroskedasticity in the $\text{VAR}(5)$ equity residuals ($\text{LB}(Q^2, 10)$ $p$-value rises from $7.23 \times 10^{-45}$ to $0.9374$). Saved `results/tables/tab32_var_resid_garch.csv`.
+- **2(g)–(h) Single Source of Truth (`src/report_numbers.py`) & Expanded Unit Tests (`tests/test_pipeline.py`):**
+  - Created `src/report_numbers.py` exposing `get_report_numbers()` and `verify_all_numbers()`. Added unit tests `test_07` through `test_10` in `tests/test_pipeline.py` (all 10 tests pass).

@@ -62,8 +62,8 @@ OIL_MAX_GAP_FRAC   = 0.05   # if Brent missing > 5% of observations, fall back t
 VAR_MAXLAGS    = 10    # maximum lag order considered in AIC selection (2 trading weeks)
 
 # Cholesky ordering for orthogonalised IRF / FEVD (most exogenous first).
-# TODO (judgment call): justified in the notebook; an alternative ordering is run
-#       as a sensitivity check.
+# Pre-specified baseline ordering justified in the notebook and report; reversed
+# (VN-first) ordering and Generalized IRFs are run as sensitivity checks.
 CHOLESKY_ORDER = ["dUS10Y", "r_OIL", "r_USDVND", "r_VN"]
 
 # Rolling out-of-sample scheme. Final cleaned sample ≈ 1,527 obs (2020-06 → 2026-10).
@@ -77,8 +77,8 @@ ROLL_REFIT     = 20
 N_TEST         = 500
 
 # --------------- Cointegration ---------------
-# TODO (judgment call): unrestricted constant — allows linear trends in the log levels
-#       (equity drift), which is the usual case for asset prices.
+# Pre-specified deterministic specification: unrestricted constant — allows linear trends
+# in the log levels (equity drift), which is the standard case for asset prices.
 JOHANSEN_DET_ORDER  = 0      # statsmodels coint_johansen: 0 = constant
 VECM_DETERMINISTIC  = "co"   # statsmodels VECM: constant outside the cointegration relation
 

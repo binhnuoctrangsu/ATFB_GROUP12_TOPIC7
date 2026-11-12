@@ -595,6 +595,78 @@ def rebuild_processed_from_raw(start: str = config.START_DATE) -> dict:
     }
 
 
+def align_vnindex_only_panel(vni: pd.Series, usdvnd: pd.Series,
+                             oil: pd.Series, dgs10: pd.Series,
+                             start: str = config.TARGET_START_DATE) -> pd.DataFrame:
+    """
+    Align VNINDEX-only (without HNXINDEX truncation) against USDVND, OIL (inner join)
+    and DGS10 (forward-filled) over the extended 10-year window (2016-11-01..2026-10-30).
+    """
+    vni = vni.loc[start:].dropna()
+    vn_days = vni.index
+    panel = pd.DataFrame({"VNINDEX": vni})
+    panel["USDVND"] = usdvnd.reindex(vn_days)
+    panel["OIL"] = oil.reindex(vn_days)
+    panel["DGS10"] = dgs10.reindex(dgs10.index.union(vn_days)).ffill().reindex(vn_days)
+    panel = panel.dropna()
+
+    for c in ["VNINDEX", "USDVND", "OIL"]:
+        panel[f"log_{c}"] = np.log(panel[c])
+
+    panel["r_VNINDEX"] = 100.0 * panel["log_VNINDEX"].diff()
+    panel["r_USDVND"] = 100.0 * panel["log_USDVND"].diff()
+    panel["r_OIL"] = 100.0 * panel["log_OIL"].diff()
+    panel["d_DGS10"] = panel["DGS10"].diff()
+
+    d_all = panel.index.values.astype("datetime64[D]")
+    panel = panel.iloc[1:].copy()
+    panel["weekdays_skipped"] = np.busday_count(d_all[:-1], d_all[1:]) - 1
+    return panel
+
+
+def pull_extended_2016(start: str = config.TARGET_START_DATE,
+                       end: str = config.END_DATE) -> pd.DataFrame:
+    """
+    Pull VNINDEX, USDVND=X, BZ=F, and DGS10 from 2016-11-01 to 2026-10-31 and build
+    the extended 10-year VNINDEX-only aligned panel (`data/processed/panel_ext2016.csv`).
+    """
+    config.DATA_RAW.mkdir(parents=True, exist_ok=True)
+    config.DATA_PROC.mkdir(parents=True, exist_ok=True)
+    print(f"[data] Pulling extended 10-year series ({start} → {end}) for Stage 6 check …")
+    vni = _pull_vnstock_index(config.VN_SYMBOL_HOSE, start, end).rename("VNINDEX")
+    vni.index.name = "date"
+    vni.to_csv(config.DATA_RAW / "vnindex_ext2016_raw.csv", header=True)
+
+    usdvnd = _yf_close(config.YF_USDVND, start, end).dropna().rename("USDVND")
+    usdvnd.to_csv(config.DATA_RAW / "usdvnd_ext2016_raw.csv", header=True)
+
+    oil = _yf_close(config.YF_BRENT, start, end).dropna().rename("OIL")
+    oil.to_csv(config.DATA_RAW / "oil_ext2016_raw.csv", header=True)
+
+    buf_start = (pd.Timestamp(start) - pd.Timedelta(days=14)).strftime("%Y-%m-%d")
+    try:
+        import pandas_datareader.data as web  # type: ignore
+        dgs10 = web.DataReader(config.FRED_US10Y, "fred", buf_start, end)[config.FRED_US10Y]
+    except Exception:
+        import requests
+        url = f"https://fred.stlouisfed.org/graph/fredgraph.csv?id={config.FRED_US10Y}"
+        txt = requests.get(url, timeout=60).text
+        df = pd.read_csv(StringIO(txt))
+        df.columns = ["date", config.FRED_US10Y]
+        dgs10 = df.set_index(pd.to_datetime(df["date"]))[config.FRED_US10Y].loc[buf_start:end]
+    dgs10 = pd.to_numeric(dgs10, errors="coerce").rename("DGS10")
+    dgs10.index = pd.to_datetime(dgs10.index)
+    dgs10.index.name = "date"
+    dgs10.to_csv(config.DATA_RAW / "dgs10_ext2016_raw.csv", header=True)
+    dgs10 = dgs10.dropna()
+
+    ext_panel = align_vnindex_only_panel(vni, usdvnd, oil, dgs10, start=start)
+    ext_panel.to_csv(config.DATA_PROC / "panel_ext2016.csv")
+    print(f"[data] Extended VNINDEX panel: {len(ext_panel)} aligned obs, "
+          f"{ext_panel.index[0].date()} → {ext_panel.index[-1].date()}.")
+    return ext_panel
+
+
 # ===========================================================================
 # 8. Main pipeline
 # ===========================================================================
@@ -605,7 +677,8 @@ def run_pipeline(start: str = config.START_DATE, end: str = config.END_DATE) -> 
     for d in (config.DATA_RAW, config.DATA_PROC):
         d.mkdir(parents=True, exist_ok=True)
         for f in d.glob("*.csv"):
-            f.unlink()
+            if "ext2016" not in f.name:
+                f.unlink()
 
     vni, hnx = pull_vn_indices(start, end)
     usdvnd = pull_usdvnd(start, end)
@@ -636,7 +709,10 @@ def run_pipeline(start: str = config.START_DATE, end: str = config.END_DATE) -> 
 
 
 if __name__ == "__main__":
-    out = run_pipeline()
-    print("\nAlignment report:\n", out["report"].to_string())
-    print("\nPanel tail:\n", out["panel"][["r_composite", "r_VNINDEX", "r_USDVND",
-                                           "r_OIL", "d_DGS10"]].tail())
+    if "--pull-ext-2016" in sys.argv:
+        pull_extended_2016()
+    else:
+        out = run_pipeline()
+        print("\nAlignment report:\n", out["report"].to_string())
+        print("\nPanel tail:\n", out["panel"][["r_composite", "r_VNINDEX", "r_USDVND",
+                                               "r_OIL", "d_DGS10"]].tail())

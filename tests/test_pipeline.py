@@ -224,6 +224,92 @@ class TestPipelinePhase1(unittest.TestCase):
         )
         np.testing.assert_allclose(panel["r_composite"].values, expected_comp.values, rtol=0, atol=1e-12)
 
+    def test_07_girf_order_invariance_and_first_variable_identity(self):
+        """
+        Verify that Pesaran-Shin (1998) GIRFs are strictly invariant to variable ordering
+        and equal the Cholesky orthogonalised IRF for whichever variable is ordered first.
+        """
+        rng = np.random.default_rng(77)
+        n = 250
+        dates = pd.bdate_range("2021-01-01", periods=n)
+        cov = np.array([
+            [1.0, 0.3, -0.2, 0.4],
+            [0.3, 1.5, 0.1, -0.3],
+            [-0.2, 0.1, 0.8, 0.25],
+            [0.4, -0.3, 0.25, 2.0],
+        ])
+        df1 = pd.DataFrame(
+            rng.multivariate_normal(np.zeros(4), cov, size=n),
+            index=dates,
+            columns=config.CHOLESKY_ORDER,
+        )
+        rev_cols = list(reversed(config.CHOLESKY_ORDER))
+        df2 = df1[rev_cols]
+
+        from statsmodels.tsa.api import VAR
+        res1 = VAR(df1).fit(2)
+        res2 = VAR(df2).fit(2)
+
+        t1 = var_mod.girf_response_table(res1, response="r_VN", periods=10)
+        t2 = var_mod.girf_response_table(res2, response="r_VN", periods=10)
+        for col in t1.columns:
+            np.testing.assert_allclose(t1[col].values, t2[col].values, rtol=0, atol=1e-12)
+
+        # For the variable ordered first in res1 ("dUS10Y"), Cholesky IRF == GIRF
+        chol1 = var_mod.irf_response_table(res1, response="r_VN", periods=10)
+        np.testing.assert_allclose(
+            chol1["shock: dUS10Y"].values, t1["shock: dUS10Y"].values, rtol=0, atol=1e-12
+        )
+
+    def test_08_granger_robust_pair_and_multitest(self):
+        """
+        Verify granger_robust_pair F_homo against statsmodels test_causality and check
+        Bonferroni/Holm step-down adjustments on a known p-value vector.
+        """
+        rng = np.random.default_rng(101)
+        n = 300
+        dates = pd.bdate_range("2021-01-01", periods=n)
+        df = pd.DataFrame(
+            rng.normal(0.0, 1.0, size=(n, 4)),
+            index=dates,
+            columns=config.CHOLESKY_ORDER,
+        )
+        from statsmodels.tsa.api import VAR
+        res = VAR(df).fit(3)
+        gc_sm = res.test_causality("r_VN", ["dUS10Y"], kind="f")
+        gc_rob = var_mod.granger_robust_pair(df, cause="dUS10Y", effect="r_VN", p=3, n_boot=200, seed=42)
+
+        self.assertAlmostEqual(gc_rob["F_homo"], float(gc_sm.test_statistic), places=10)
+        for k in ("p_homo", "p_HC3", "p_HAC", "p_wild_boot"):
+            self.assertGreater(gc_rob[k], 0.0)
+            self.assertLessEqual(gc_rob[k], 1.0)
+
+        # Known 4-test p-value vector: [0.005, 0.015, 0.04, 0.20]
+        p_vec = pd.Series([0.015, 0.20, 0.005, 0.04], index=["T1", "T2", "T3", "T4"])
+        adj = var_mod.bonferroni_holm_adjust(p_vec)
+        # Expected Bonferroni (M=4): [0.06, 0.80, 0.02, 0.16]
+        np.testing.assert_allclose(adj["p_bonferroni"].values, [0.06, 0.80, 0.02, 0.16], atol=1e-12)
+        # Expected Holm: sorted [0.005*4=0.02, 0.015*3=0.045, 0.04*2=0.08, 0.20*1=0.20]
+        np.testing.assert_allclose(adj["p_holm"].values, [0.045, 0.20, 0.02, 0.08], atol=1e-12)
+
+    def test_09_oos_r2_and_directional_accuracy(self):
+        """Verify Campbell-Thompson OOS R^2 and directional accuracy in score_table."""
+        idx = pd.bdate_range("2024-01-01", periods=4)
+        actual = pd.Series([1.0, -1.0, 2.0, -2.0], index=idx)  # MSE(RW=0) = (1+1+4+4)/4 = 2.5
+        fc_good = pd.Series([0.5, -0.5, 1.0, -1.0], index=idx)  # errors: [0.5, -0.5, 1, -1] -> MSE = 0.625
+        fc_rw = pd.Series([0.0, 0.0, 0.0, 0.0], index=idx)
+        st = fe_mod.score_table(actual, {"Model": fc_good, "Random walk": fc_rw})
+        # OOS R2 = 100 * (1 - 0.625 / 2.5) = 75.0%; DA = 100.0%
+        self.assertAlmostEqual(float(st.loc["Model", "OOS R2 vs RW (%)"]), 75.0, places=12)
+        self.assertAlmostEqual(float(st.loc["Model", "DA (%)"]), 100.0, places=12)
+        self.assertAlmostEqual(float(st.loc["Random walk", "OOS R2 vs RW (%)"]), 0.0, places=12)
+        self.assertAlmostEqual(float(st.loc["Random walk", "DA (%)"]), 50.0, places=12)
+
+    def test_10_report_numbers_consistency(self):
+        """Verify that all canonical report numbers pass cross-table assertions."""
+        from src import report_numbers
+        self.assertTrue(report_numbers.verify_all_numbers())
+
 
 if __name__ == "__main__":
     unittest.main()
