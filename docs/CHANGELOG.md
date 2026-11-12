@@ -87,3 +87,13 @@ All significant architectural, methodological, data-validation, and editorial ch
 - `report/ATFB_Essay_Group12.pdf` (gitignored per `.gitignore`):
   - Exported via Microsoft Word COM automation and verified via `pypdf` in `src/check_report_numbers.py`: 20 total pages (Title Page = p. 1; Main text from Abstract to Section 6 Conclusion = pp. 2–16, i.e. **15 pages** $\le 15$; References = pp. 17–18; Appendices A–C = pp. 19–20).
 - `docs/requirements_checklist.md`: Updated all format, content, and verification items to `verified` (with explicit `TODO (manual)` for group members and assigned textbook).
+
+
+---
+
+## [Phase 6] — 2026-11-13 — Master Pipeline Runner, Submission Packager & Documentation
+
+### Added / Updated
+- `README.md`: Comprehensive setup guide, repository directory tree, offline/online reproduction instructions, `vnstock` data-licensing statement, and pre-submission group checklist.
+- `run_all.py`: End-to-end master script orchestrating `src/data.py` -> `notebooks/t7_macro_links.ipynb` -> `src/build_report.py` -> `tests/test_pipeline.py` -> `src/check_report_numbers.py`.
+- `make_submission.py`: Builds `D:\ANTIGRAVITY\GROUP\ATFB_Essay_Group12_code.zip` (containing all code, notebooks, docs, `.docx` report, `data/raw/*.csv`, `data/processed/*.csv`, and `results/{tables,figures}/*` for Teams submission) and copies `D:\ANTIGRAVITY\GROUP\ATFB_Essay_Group12.pdf` outside the git repository.
