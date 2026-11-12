@@ -54,3 +54,22 @@ All significant architectural, methodological, data-validation, and editorial ch
 ### Added / Updated
 - `docs/literature_review.md`: Structured literature review synthesizing 19 live-verified academic sources across 5 themes (VAR/GIRF/cointegration/GARCH econometrics; exchange-rate & US monetary spillovers / Global Financial Cycle; oil price shocks & stock returns; out-of-sample return predictability & nested Diebold–Mariano inference; Vietnamese macro-equity empirical studies) and mapping each theme directly to our empirical findings (`tab01`–`tab33`).
 - `docs/references.md`: Updated with complete APA 7th edition citations, DOIs, stable URLs, and access dates (`2026-11-13`) for all 19 academic sources, all 10 published VN-Index/HNX-Index checkpoints, and primary data feeds, plus an explicit *"Unverified / Excluded Candidate References"* section and the textbook `TODO` placeholder.
+
+
+---
+
+## [Phase 4] — 2026-11-13 — Notebook Completion, End-to-End Execution & Automated Consistency Checker
+
+### Added / Updated
+- `notebooks/t7_macro_links.ipynb`:
+  - Added Stage 1.5 (*Independent data cross-validation and series quality diagnostics*, `tab25`, `tab26`).
+  - Expanded Stage 3.5 (*Ordering sensitivity and Generalized IRFs*, `tab12`, `tab27a`, `tab27b`, `fig09`).
+  - Added Stage 3.6 (*Granger causality robustness across lags $p \in \{1, 2, 3, 5, 10\}$, provider-gap exclusion, White HC3, Newey–West HAC, Rademacher Wild Bootstrap, and 12-pair Bonferroni/Holm adjustments*, `tab28`, `tab29`).
+  - Added Stage 3.7 (*Conditional heteroskedasticity in VAR(5) residuals: Student-$t$ GARCH(1,1) and GJR-GARCH(1,1) filter*, `tab32`).
+  - Updated Stage 5 (*Out-of-sample forecast comparison*) to display Campbell–Thompson $R^2_{\text{OOS}}$, directional accuracy (`DA (%)`), fixed-lag $\text{VAR}(1)/\text{VAR}(2)/\text{VAR}(5)$ comparisons (`tab19`, `tab33`), and the Giacomini & White (2006) finite-rolling-window justification for Diebold–Mariano tests on nested models.
+  - Added Stage 6.2 (*Extended 10-year VN-Index robustness check, `2016-11-02` to `2026-10-30`, $N = 2,384$*, `tab30`) and Stage 6.3 (*Subsample and SBV FX-band regime stability*, `tab31`, `fig10`).
+  - Completed the **Conclusions** section (marked `"DRAFT for group review: rewrite in own words before final submission"`) covering empirical synthesis, practical implications for commercial bank treasuries, equity funds, and investors, 6 methodological/data limitations, and avenues for future research, followed by a final verification code cell calling `src.report_numbers.verify_all_numbers()`.
+  - Removed all internal-process wording (`"locked methodology"`, `"locked rule"`) and resolved `TODO (judgment call)` notes while preserving the intentional `config.MEMBERS` placeholder.
+  - Executed all 58 cells (28 code cells) top-to-bottom with 0 errors.
+- `src/data.py`: Added fast connectivity check `_network_available()` and offline fallback to `rebuild_processed_from_raw()` so notebook and grading runs execute seamlessly both online and in isolated/offline environments.
+- `src/update_notebook.py` and `src/check_report_numbers.py`: Automated notebook updater/executor and cross-artifact consistency verifier.
