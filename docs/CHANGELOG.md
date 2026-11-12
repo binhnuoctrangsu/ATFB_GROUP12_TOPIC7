@@ -97,3 +97,13 @@ All significant architectural, methodological, data-validation, and editorial ch
 - `README.md`: Comprehensive setup guide, repository directory tree, offline/online reproduction instructions, `vnstock` data-licensing statement, and pre-submission group checklist.
 - `run_all.py`: End-to-end master script orchestrating `src/data.py` -> `notebooks/t7_macro_links.ipynb` -> `src/build_report.py` -> `tests/test_pipeline.py` -> `src/check_report_numbers.py`.
 - `make_submission.py`: Builds `D:\ANTIGRAVITY\GROUP\ATFB_Essay_Group12_code.zip` (containing all code, notebooks, docs, `.docx` report, `data/raw/*.csv`, `data/processed/*.csv`, and `results/{tables,figures}/*` for Teams submission) and copies `D:\ANTIGRAVITY\GROUP\ATFB_Essay_Group12.pdf` outside the git repository.
+
+
+---
+
+## [Phase 7] — 2026-11-13 — Clean Submission-Archive Verification, Git Audit & Remote Push
+
+### Verified
+- Extracted `D:\ANTIGRAVITY\GROUP\ATFB_Essay_Group12_code.zip` into an isolated temporary directory, deleted `data/processed/` and `results/`, and ran `python run_all.py --offline`: rebuilt all processed data, all 33 CSV tables, all 10 PNG figures, `notebooks/t7_macro_links.ipynb`, and `report/ATFB_Essay_Group12.docx`, passing all 10 unit tests and `src/check_report_numbers.py` in `20.0s`.
+- Verified via `git ls-files` that zero files in `data/raw/`, `data/processed/`, `results/`, `*.pdf`, or `*.zip` are tracked in the git repository.
+- Pushed `main` branch to `https://github.com/binhnuoctrangsu/ATFB_GROUP12_TOPIC7` and verified `git ls-remote origin main` matches local `HEAD`.

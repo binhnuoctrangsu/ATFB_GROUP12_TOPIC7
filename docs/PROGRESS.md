@@ -11,4 +11,4 @@
 | **Phase 4** | Notebook completion (`notebooks/t7_macro_links.ipynb`), Conclusions draft, remove internal wording, execute end-to-end | **DONE** | All 58 cells (28 code cells) executed with 0 errors; `src/check_report_numbers.py` & 10 unit tests pass. |
 | **Phase 5** | Build `report/ATFB_Essay_Group12.docx` & `.pdf` ($\le 15$ pages main text, $\le 200$ words abstract), run `src/check_report_numbers.py` | **DONE** | Built `.docx` & exported `.pdf` (20 pages total: p. 1 Title, pp. 2–16 Main text = 15 pages, pp. 17–20 References & Appendices A–C; Abstract = 192 words). |
 | **Phase 6** | Finalize `README.md`, `run_all.py`, `make_submission.py` (`D:\ANTIGRAVITY\GROUP\ATFB_Essay_Group12_code.zip`) | **DONE** | Master runner `run_all.py` and submission packager `make_submission.py` verified. |
-| **Phase 7** | Fresh-clone test, submission-zip test, final git check & `git push origin main` | **IN PROGRESS** | |
+| **Phase 7** | Fresh-clone test, submission-zip test, final git check & `git push origin main` | **DONE** | Clean extraction & rebuild test passed; `git ls-files` verified; pushed to `origin main`. |
