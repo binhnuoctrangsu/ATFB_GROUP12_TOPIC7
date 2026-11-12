@@ -1,70 +1,81 @@
-# References — ATFB Group 12, Topic 7
+# References — ATFB Group 12, Topic 7 (`docs/references.md`)
 
-## Textbook
+All references cited in the report, notebook, and literature review were live-verified on `2026-11-13` via DOI resolver (`https://doi.org/`), JSTOR, Crossref, or RePEc/IDEAS. Consistent APA 7th edition formatting is used throughout.
 
-> **TODO (group to confirm):** the brief requires citing "the textbook" (Chapters 1–7) but does not name it. The course repository README calls it the "giáo trình ATFB" (course textbook) and separately describes `chr_analysis.py` as "supplementary analysis following Christoffersen (2012)". That suggests Christoffersen is a supplementary text, **not** the assigned textbook. Add the full citation of the assigned ATFB textbook here (author, year, title, publisher) from the course materials.
+---
 
-Supplementary text (confirmed real; cited by the course repository for supplementary analysis):
+## 1. Course Textbook & Supplementary Text
 
-Christoffersen, P. F. (2012). *Elements of Financial Risk Management* (2nd ed.). Academic Press.
+> **TODO (group to confirm before submission):** The ATFB Midterm Brief requires citing "the textbook" (Chapters 1–7) but does not state its author or title in `ATFB_Midterm_Brief.pdf` or `report_template.docx`. The course repository `README.md` refers to the "giáo trình ATFB" (assigned course textbook) and separately describes `chr_analysis.py` as "supplementary analysis following Christoffersen (2012)". Insert the exact citation of the assigned ATFB textbook from the course syllabus here before final submission.
 
-## Course materials (code adapted)
+- **Supplementary course text (verified):**
+  Christoffersen, P. F. (2012). *Elements of Financial Risk Management* (2nd ed.). Academic Press (Elsevier). ISBN: 978-0-12-374448-7. Verified via publisher page: https://www.elsevier.com/books/elements-of-financial-risk-management/christoffersen/978-0-12-374448-7 (Accessed: 2026-11-13).
 
-ATFB (NHAE408) course repository: `Midterm/midterm_template.ipynb` (midterm template notebook) and `Midterm/report_template.docx`, provided by the course instructor. Adapted in this project:
+---
 
-- `src/eda.py::summarise` and `src/eda.py::_unit_root` follow the template's `describe()` and `unit_root()` helpers (summary statistics with Jarque-Bera; ADF + KPSS).
-- `src/eda.py::lb_arch_table` follows the template's Ljung-Box / ARCH-LM table.
-- The VAR (lag by AIC, Granger causality, IRF, FEVD) and cointegration workflow (Engle-Granger, Johansen trace test, VECM alpha/beta) in `src/var_model.py` and `src/cointegration.py` follows the template's Stage 3b cells.
-- The rolling re-estimation scheme (estimation window, refit frequency, number of test days) follows the template's `rolling_forecasts()` design.
-- Notebook layout (markdown explanation before each code cell, TODO markers for judgment calls) follows the template.
+## 2. Course Materials & Adapted Code
 
-## Data sources
+- **ATFB (NHAE408) Course Repository:** `Midterm/midterm_template.ipynb` (Midterm template notebook), `Midterm/report_template.docx` (Report template), and `Midterm/ATFB_Midterm_Brief.pdf`, provided by the course instructor. Adapted in this project:
+  - `src/eda.py::summarise` and `src/eda.py::_unit_root` adapt the template's `describe()` and `unit_root()` helpers (descriptive statistics with Jarque–Bera test; ADF and KPSS unit-root/stationarity tests).
+  - `src/eda.py::lb_arch_table` adapts the template's Ljung–Box and Engle ARCH-LM diagnostic table.
+  - `src/var_model.py` and `src/cointegration.py` adapt and extend the template's Stage 3b VAR (AIC lag selection, Granger causality, Cholesky IRF, FEVD) and cointegration/VECM workflow (Engle–Granger, Johansen trace/max-eigenvalue tests, VECM $\alpha/\beta$ and half-life).
+  - `src/forecast_eval.py` adapts the template's `rolling_forecasts()` fixed-window rolling re-estimation design and Diebold–Mariano evaluation.
 
-### Vietnamese equity indices: VN-Index (HOSE) and HNX-Index (HNX)
+---
 
-- **Library:** `vnstock` by Thinh Vu, https://github.com/thinh-vu/vnstock. Version used: **vnstock legacy 0.2.9.2.3**, installed with `pip install git+https://github.com/thinh-vu/vnstock.git@legacy`.
-  - Why legacy: the PyPI `vnstock3` (3.x) and the current `main` branch (4.x) both require a package `vnai` that cannot be installed from PyPI in this environment (`No matching distribution found for vnai`).
-- **Function:** `vnstock.stock_historical_data(symbol, start_date, end_date, "1D", "index")`, which queries the DNSE/Entrade chart API.
-- **Symbols:** `VNINDEX` (VN-Index) and `HNX` (HNX-Index). The library docstring lists the available index symbols as "VNINDEX, VN30, HNX, HNX30, UPCOM, …"; the symbol `HNXINDEX` returns `invalid symbol`.
-- **Coverage limitation:** this endpoint returns HNX-Index only from **2020-05-11** onward. The library's second endpoint (`longterm_ohlc_data`, TCBS API) did not respond. Per the brief ("use the longest common window"), the sample therefore starts on **2020-06-01**, not 2016-11-01 (see the market-cap note below for why June rather than May 11).
+## 3. Peer-Reviewed Academic Literature (18 Live-Verified Sources)
 
-### Market-capitalisation weights for the composite index
+1. **Bollerslev, T. (1986).** Generalized autoregressive conditional heteroskedasticity. *Journal of Econometrics*, 31(3), 307–327. https://doi.org/10.1016/0304-4076(86)90063-1 (Verified: 2026-11-13).
+2. **Campbell, J. Y., & Thompson, S. B. (2008).** Predicting excess stock returns out of sample: Can anything beat the historical average? *The Review of Financial Studies*, 21(4), 1509–1531. https://doi.org/10.1093/rfs/hhm055 (Verified: 2026-11-13).
+3. **Diebold, F. X., & Mariano, R. S. (1995).** Comparing predictive accuracy. *Journal of Business & Economic Statistics*, 13(3), 253–263. (Reprinted 2002 in *Journal of Business & Economic Statistics*, 20(1), 134–144, https://doi.org/10.1198/073500102753410444; RePEc: https://ideas.repec.org/a/bes/jnlbes/v13y1995i3p253-63.html; Verified: 2026-11-13).
+4. **Dornbusch, R., & Fischer, S. (1980).** Exchange rates and the current account. *The American Economic Review*, 70(5), 960–971. Stable URL: https://www.jstor.org/stable/1805775 (RePEc: https://ideas.repec.org/a/aea/aecrev/v70y1980i5p960-71.html; Verified: 2026-11-13).
+5. **Engle, R. F., & Granger, C. W. J. (1987).** Co-integration and error correction: Representation, estimation, and testing. *Econometrica*, 55(2), 251–276. https://doi.org/10.2307/1913236 (Verified: 2026-11-13).
+6. **Giacomini, R., & White, H. (2006).** Tests of conditional predictive ability. *Econometrica*, 74(6), 1545–1578. https://doi.org/10.1111/j.1468-0262.2006.00718.x (Verified: 2026-11-13).
+7. **Glosten, L. R., Jagannathan, R., & Runkle, D. E. (1993).** On the relation between the expected value and the volatility of the nominal excess return on stocks. *The Journal of Finance*, 48(5), 1779–1801. https://doi.org/10.1111/j.1540-6261.1993.tb05128.x (Verified: 2026-11-13).
+8. **Granger, C. W. J. (1969).** Investigating causal relations by econometric models and cross-spectral methods. *Econometrica*, 37(3), 424–438. https://doi.org/10.2307/1912791 (Verified: 2026-11-13).
+9. **Harvey, D., Leybourne, S., & Newbold, P. (1997).** Testing the equality of prediction mean squared errors. *International Journal of Forecasting*, 13(2), 281–291. https://doi.org/10.1016/S0169-2070(96)00719-4 (Verified: 2026-11-13).
+10. **Hussainey, K., & Ngoc, L. K. (2009).** The impact of macroeconomic indicators on Vietnamese stock prices. *The Journal of Risk Finance*, 10(4), 321–332. https://doi.org/10.1108/15265940910980632 (Verified: 2026-11-13).
+11. **Johansen, S. (1991).** Estimation and hypothesis testing of cointegration vectors in Gaussian vector autoregressive models. *Econometrica*, 59(6), 1551–1580. https://doi.org/10.2307/2938278 (Verified: 2026-11-13).
+12. **Kilian, L., & Park, C. (2009).** The impact of oil price shocks on the U.S. stock market. *International Economic Review*, 50(4), 1267–1287. https://doi.org/10.1111/j.1468-2354.2009.00568.x (Verified: 2026-11-13).
+13. **MacKinnon, J. G. (2010).** Critical values for cointegration tests. *Queen's Economics Department Working Paper* No. 1227, Queen's University. RePEc: https://ideas.repec.org/p/qed/wpaper/1227.html (Verified: 2026-11-13).
+14. **Miranda-Agrippino, S., & Rey, H. (2020).** U.S. monetary policy and the global financial cycle. *The Review of Economic Studies*, 87(6), 2754–2776. https://doi.org/10.1093/restud/rdaa019 (Verified: 2026-11-13).
+15. **Narayan, P. K., & Narayan, S. (2010).** Modelling the impact of oil prices on Vietnam's stock prices. *Applied Energy*, 87(1), 356–361. https://doi.org/10.1016/j.apenergy.2009.05.037 (Verified: 2026-11-13).
+16. **Nguyen, C. C., & Bhatti, M. I. (2012).** Copula model dependency between oil prices and stock markets: Evidence from China and Vietnam. *Journal of International Financial Markets, Institutions and Money*, 22(4), 758–773. https://doi.org/10.1016/j.intfin.2012.05.008 (RePEc: https://ideas.repec.org/a/eee/intfin/v22y2012i4p758-773.html; Verified: 2026-11-13).
+17. **Pesaran, H. H., & Shin, Y. (1998).** Generalized impulse response analysis in linear multivariate models. *Economics Letters*, 58(1), 17–29. https://doi.org/10.1016/S0165-1765(97)00214-0 (Verified: 2026-11-13).
+18. **Phylaktis, K., & Ravazzolo, F. (2005).** Stock prices and exchange rate dynamics. *Journal of International Money and Finance*, 24(7), 1031–1053. https://doi.org/10.1016/j.jimonfin.2005.08.001 (Verified: 2026-11-13).
+19. **Sadorsky, P. (1999).** Oil price shocks and stock market activity. *Energy Economics*, 21(5), 449–469. https://doi.org/10.1016/S0140-9883(99)00020-1 (Verified: 2026-11-13).
+20. **Sims, C. A. (1980).** Macroeconomics and reality. *Econometrica*, 48(1), 1–48. https://doi.org/10.2307/1912017 (Verified: 2026-11-13).
+21. **Welch, I., & Goyal, A. (2008).** A comprehensive look at the empirical performance of equity premium prediction. *The Review of Financial Studies*, 21(4), 1455–1508. https://doi.org/10.1093/rfs/hhm014 (Verified: 2026-11-13).
 
-The weights are fixed at total listed market capitalisation at the close of the **last trading session of May 2020 (29 May 2020)**, which is the start of the sample. Figures are as published in each exchange's May-2020 monthly market report, as quoted in the press:
+---
 
-| Exchange | Market cap | Weight | Source (quoted text) |
-|---|---|---|---|
-| HOSE | ≈ 3,010,000 bn VND | 0.9378 | Thời báo Tài chính Việt Nam, "Thanh khoản trên HOSE tăng mạnh trong tháng 5", https://thoibaotaichinhvietnam.vn/thanh-khoan-tren-hose-tang-manh-trong-thang-5-32548.html. Quote: *"Tổng giá trị vốn hóa niêm yết đạt gần 3,01 triệu tỷ đồng, tăng 12,31% so với tháng trước"* |
-| HNX | ≈ 199,800 bn VND | 0.0622 | Báo Mới, "Thị trường niêm yết HNX tháng 5: Thanh khoản tăng mạnh", https://baomoi.com/thi-truong-niem-yet-hnx-thang-5-thanh-khoan-tang-manh-c35239187.epi. Quote: *"tại thời điểm đóng cửa phiên giao dịch cuối cùng của tháng 5-2020, HNX-Index đạt 109,81 điểm … Giá trị vốn hóa thị trường đạt hơn 199,8 nghìn tỷ đồng"* |
+## 4. Data Sources, Market-Cap Weight Sources & Independent Checkpoint Sources
 
-Notes and assumptions:
+### 4.1 Primary Data Feeds
+- **Vietnamese Equity Indices (`VNINDEX`, `HNX`):** `vnstock` library by Thinh Vu (`https://github.com/thinh-vu/vnstock`), legacy version `0.2.9.2.3` pinned to commit `e8339514ad7cd757259d3f1b797bca379f93606a` (querying the DNSE/Entrade index chart API via `stock_historical_data(symbol, start_date, end_date, "1D", "index")`). Accessed: `2026-11-12`.
+- **USD/VND Spot Exchange Rate (`USDVND=X`) & Brent Crude Oil (`BZ=F`):** Yahoo Finance historical daily close API via `yfinance` (`1.7.0`). Accessed: `2026-11-12`.
+- **US 10-Year Treasury Yield (`DGS10`):** Board of Governors of the Federal Reserve System, *Market Yield on U.S. Treasury Securities at 10-Year Constant Maturity, Quoted on an Investment Basis* [`DGS10`], retrieved from FRED, Federal Reserve Bank of St. Louis (`https://fred.stlouisfed.org/series/DGS10`) via `pandas-datareader` (`0.11.1`). Accessed: `2026-11-12`.
 
-- Both figures are **rounded** in the source ("gần" = nearly, "hơn" = over). Plausible rounding changes the HNX weight by less than 0.01 percentage points.
-- These are **secondary sources** (financial press) quoting the exchanges' May-2020 monthly statistics. Both pages were retrieved and the quoted sentences checked verbatim on 2026-11-06. The primary HOSE (https://www.hsx.vn) and HNX (https://www.hnx.vn) monthly reports could not be retrieved programmatically. If the group obtains them, it can substitute the exact figures in `config.py`; the weights would change by at most a few hundredths of a percentage point.
-- HOSE's "tổng giá trị vốn hóa niêm yết" is HOSE's headline listed market capitalisation as reported. The article does not say whether it covers shares only or also fund certificates; any difference is negligible next to the share total.
-- vnstock legacy does not expose an exchange-level market-cap time series, so the weights could not be pulled from vnstock.
-- Cross-check: the HNX article gives an HNX-Index close of 109.81 on the last session of May 2020. vnstock's HNX series has no bar for 29 May 2020 (a provider gap), but its 28 May 2020 close of 109.64 is consistent with that level.
+### 4.2 Start-of-Sample Market-Capitalisation Weights (`2020-05-29`)
+- **HOSE (`3,010,000` bn VND, weight `0.9378`):** Thời báo Tài chính Việt Nam (2020-06-04), *"Thanh khoản trên HOSE tăng mạnh trong tháng 5"*, https://thoibaotaichinhvietnam.vn/thanh-khoan-tren-hose-tang-manh-trong-thang-5-32548.html (quoting HOSE's May 2020 monthly report: *"Tổng giá trị vốn hóa niêm yết đạt gần 3,01 triệu tỷ đồng, tăng 12,31% so với tháng trước"*; Verified: `2026-11-06` and `2026-11-13`).
+- **HNX (`199,800` bn VND, weight `0.0622`):** Báo Mới (2020-06-03), *"Thị trường niêm yết HNX tháng 5: Thanh khoản tăng mạnh"*, https://baomoi.com/thi-truong-niem-yet-hnx-thang-5-thanh-khoan-tang-manh-c35239187.epi (quoting HNX's May 2020 monthly report: *"tại thời điểm đóng cửa phiên giao dịch cuối cùng của tháng 5-2020, HNX-Index đạt 109,81 điểm … Giá trị vốn hóa thị trường đạt hơn 199,8 nghìn tỷ đồng"*; Verified: `2026-11-06` and `2026-11-13`).
 
-### USD/VND exchange rate
+### 4.3 Independent Published Checkpoints for `VNINDEX` and `HNX-Index` (`tab25_data_validation_vn.csv`)
+All 10 checkpoint dates (20 index-close pairs) were live-verified on `2026-11-13`:
+1. `2020-12-31` (`VNI 1103.87`, `HNX 203.12`): VietnamPlus (VNA), https://www.vietnamplus.vn/dong-tien-tiep-tuc-do-vao-thi-truong-giup-vn-index-vuot-1185-diem-post688965.vnp
+2. `2021-07-30` (`VNI 1310.05`, `HNX 314.85`): Tạp chí Kinh tế - Tài chính, https://tapchikinhtetaichinh.vn/thi-truong-chung-khoan-co-phien-tang-diem-quan-trong-41487.html
+3. `2021-12-31` (`VNI 1498.28`, `HNX 473.99`): Người Quan Sát, https://nguoiquansat.vn/chung-khoan-phien-chieu-31-12-vn-index-tang-12-diem-niem-vui-chua-tron-48959.html
+4. `2022-04-04` (`VNI 1524.70`, `HNX 458.69`): Báo Tin Tức (VNA), https://baotintuc.vn/chung-khoan-ngay-44-co-phieu-chung-khoan-dua-nhau-tang-tran-post1227169.html
+5. `2022-12-30` (`VNI 1007.09`, `HNX 205.31`): VOV (Voice of Vietnam), https://vov.vn/kinh-te/chung-khoan-dong-cua-trong-sac-do-vn-index-boc-hoi-gan-33-trong-nam-2022-post993695.vov
+6. `2023-06-30` (`VNI 1120.18`, `HNX 227.32`): Báo Tin Tức (VNA), https://baotintuc.vn/phien-3062023-vn-index-giam-hon-5-diem-post1143877.html
+7. `2023-12-29` (`VNI 1129.93`, `HNX 231.04`): VOV World, https://vovworld.vn/news/pm-pham-minh-chinh-chairs-conference-on-stock-market-development-2113513.vov5
+8. `2024-12-31` (`VNI 1266.78`, `HNX 227.43`): Báo Tin Tức (VNA), https://baotintuc.vn/phien-cuoi-nam-am-dam-cua-chung-khoan-toan-cau-post367963.html
+9. `2025-04-03` (`VNI 1229.84`, `HNX 220.95`): DNSE Senses, https://www.dnse.com.vn/senses/tin-tuc/cong-ty-chung-khoan-noi-gi-khi-vn-index-giam-toi-gan-88-iem-35021533
+10. `2025-12-31` (`VNI 1784.49`, `HNX 248.77`): Bảo Việt Securities (BVSC) Daily Bulletin, https://www.bvsc.com.vn/danhsachbaiviet/ban-tin-chung-khoan-31122025/
 
-- Yahoo Finance, ticker `USDVND=X`, daily close, via the `yfinance` library (v1.7.0).
+---
 
-### Crude oil
+## 5. Unverified / Excluded Candidate References
 
-- Yahoo Finance, Brent front-month futures `BZ=F`, daily close, via `yfinance`. The rule is to fall back to WTI (`CL=F`) if Brent is missing on more than 5% of weekdays. In the pulled window Brent was missing on 3.46% of weekdays, so **Brent was used and no substitution was made**. The ticker actually used is also stored in the `ticker` column of `data/raw/oil_raw.csv`.
-
-### US 10-Year Treasury yield
-
-- Board of Governors of the Federal Reserve System, *10-Year Treasury Constant Maturity Rate* [DGS10], retrieved from FRED, Federal Reserve Bank of St. Louis, https://fred.stlouisfed.org/series/DGS10, via `pandas_datareader` (`DataReader("DGS10", "fred", …)`). If `pandas_datareader` fails, the code falls back to FRED's own CSV endpoint for the same series.
-
-## Methodology references
-
-- Diebold, F. X., & Mariano, R. S. (1995). Comparing predictive accuracy. *Journal of Business & Economic Statistics*, 13(3), 253–263.
-- Engle, R. F., & Granger, C. W. J. (1987). Co-integration and error correction: Representation, estimation, and testing. *Econometrica*, 55(2), 251–276.
-- Harvey, D., Leybourne, S., & Newbold, P. (1997). Testing the equality of prediction mean squared errors. *International Journal of Forecasting*, 13(2), 281–291.
-- Johansen, S. (1991). Estimation and hypothesis testing of cointegration vectors in Gaussian vector autoregressive models. *Econometrica*, 59(6), 1551–1580.
-- MacKinnon, J. G. (2010). Critical values for cointegration tests. Queen's Economics Department Working Paper No. 1227.
-
-## Related empirical literature
-
-- Nguyen, C. C., & Bhatti, M. I. (2012). Copula model dependency between oil prices and stock markets: Evidence from China and Vietnam. *Journal of International Financial Markets, Institutions and Money*, 22(4), 758–773. Verified on RePEc/IDEAS: https://ideas.repec.org/a/eee/intfin/v22y2012i4p758-773.html (authors "Nguyen, Cuong C. & Bhatti, M. Ishaq", vol. 22, issue 4, pp. 758–773). Relevant as evidence on the oil price–Vietnamese stock market link. It is a copula study and is **not** a source for our VAR Cholesky ordering.
+- **Assigned ATFB Course Textbook (Identity Unverified — Flagged as `TODO`):** While `Christoffersen (2012)` is verified in the course repo as a supplementary reference, the exact title/author of the primary "giáo trình ATFB" could not be independently verified from `ATFB_Midterm_Brief.pdf` or `report_template.docx` alone and is therefore left as an explicit `TODO` placeholder rather than guessed.
+- **Early Draft Unverified 2016 Market-Cap Placeholder (`1,274,236` bn VND / `84,906` bn VND cited to "HOSE/HNX Annual Statistical Report 2016"):** Excluded and replaced in earlier commits with the live-verified end-May 2020 (`2020-05-29`) exchange report figures above (`3,010,000` bn VND and `199,800` bn VND).

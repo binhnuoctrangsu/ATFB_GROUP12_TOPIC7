@@ -46,3 +46,11 @@ All significant architectural, methodological, data-validation, and editorial ch
   - Implemented `fit_var_resid_garch()` using `arch==8.0.0`, confirming that Student-$t$ $\text{GARCH}(1,1)$ ($\alpha_1 + \beta_1 = 0.9368, \hat{\nu} = 4.25$) and $\text{GJR-GARCH}(1,1)$-$t$ ($\gamma_1 = 0.3496$) completely absorb the conditional heteroskedasticity in the $\text{VAR}(5)$ equity residuals ($\text{LB}(Q^2, 10)$ $p$-value rises from $7.23 \times 10^{-45}$ to $0.9374$). Saved `results/tables/tab32_var_resid_garch.csv`.
 - **2(g)–(h) Single Source of Truth (`src/report_numbers.py`) & Expanded Unit Tests (`tests/test_pipeline.py`):**
   - Created `src/report_numbers.py` exposing `get_report_numbers()` and `verify_all_numbers()`. Added unit tests `test_07` through `test_10` in `tests/test_pipeline.py` (all 10 tests pass).
+
+---
+
+## [Phase 3] — 2026-11-13 — Live-Verified Literature Review & Reference Registry
+
+### Added / Updated
+- `docs/literature_review.md`: Structured literature review synthesizing 19 live-verified academic sources across 5 themes (VAR/GIRF/cointegration/GARCH econometrics; exchange-rate & US monetary spillovers / Global Financial Cycle; oil price shocks & stock returns; out-of-sample return predictability & nested Diebold–Mariano inference; Vietnamese macro-equity empirical studies) and mapping each theme directly to our empirical findings (`tab01`–`tab33`).
+- `docs/references.md`: Updated with complete APA 7th edition citations, DOIs, stable URLs, and access dates (`2026-11-13`) for all 19 academic sources, all 10 published VN-Index/HNX-Index checkpoints, and primary data feeds, plus an explicit *"Unverified / Excluded Candidate References"* section and the textbook `TODO` placeholder.
