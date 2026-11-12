@@ -89,6 +89,9 @@ def diebold_mariano(actual: pd.Series, fc_a: pd.Series, fc_b: pd.Series,
     n, dbar = len(d), d.mean()
     gam = [np.mean((d[k:] - dbar) * (d[:n - k] - dbar)) for k in range(h)]
     var = (gam[0] + 2 * sum(gam[1:])) / n
+    if var <= 0:
+        return {"mean loss diff": float(dbar), "DM stat": 0.0, "p-value": 1.0,
+                "A better at 5%": False, "B better at 5%": False}
     dm = dbar / np.sqrt(var)
     dm *= np.sqrt((n + 1 - 2 * h + h * (h - 1) / n) / n)
     p = 2 * stats.t.sf(abs(dm), df=n - 1)

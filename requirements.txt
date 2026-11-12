@@ -1,21 +1,38 @@
-# ATFB Group 12, Topic 7 — pinned to the versions used to build and run the project
-# Python 3.13.3
+# ATFB (NHAE408) Group 12, Topic 7 — Reproducible Python Environment
+# Python version used to build and verify: Python 3.13.3 (Windows 10/11 x64)
 # Install: pip install -r requirements.txt
+#
+# Every package below is directly imported in src/ or required to execute
+# notebooks/t7_macro_links.ipynb via jupyter nbconvert:
 
+# Core numerical & tabular manipulation (src/data.py, src/eda.py, src/var_model.py, etc.)
 numpy==2.5.4
 pandas==3.1.0
+
+# Statistical distributions, Jarque-Bera, Q-Q plot, Diebold-Mariano t-distribution (src/eda.py, src/forecast_eval.py)
 scipy==1.18.1
+
+# Publication-quality figures (src/plots.py)
 matplotlib==3.11.2
+
+# Econometric estimation: ADF, KPSS, Ljung-Box, ACF, VAR, Granger, IRF, FEVD, Johansen, VECM
+# (src/eda.py, src/var_model.py, src/cointegration.py, src/forecast_eval.py)
 statsmodels==0.15.0
+
+# Conditional heteroskedasticity check: GARCH(1,1)-t on VAR composite equity residuals (src/var_model.py)
 arch==8.0.0
+
+# International financial series download: USD/VND (USDVND=X) and Brent crude (BZ=F) (src/data.py)
 yfinance==1.7.0
+
+# FRED macroeconomic series download: 10-Year US Treasury Constant Maturity Rate (DGS10) (src/data.py)
 pandas-datareader==0.11.1
 
-# vnstock legacy 0.2.9.2.3 (Thinh Vu). Not on PyPI under this version; newer vnstock
-# releases need the package `vnai`, which is not installable from PyPI. Install from git:
-vnstock @ git+https://github.com/thinh-vu/vnstock.git@legacy
+# Vietnamese equity index series (VNINDEX, HNX) via Thinh Vu's vnstock legacy 0.2.9.2.3
+# Pinned to exact verified commit SHA on branch `legacy` (newer vnstock3/4 require `vnai`):
+vnstock @ git+https://github.com/thinh-vu/vnstock.git@e8339514ad7cd757259d3f1b797bca379f93606a
 
-# Notebook execution
+# Headless notebook execution & verification (`jupyter nbconvert --to notebook --execute --inplace`)
 ipykernel==7.4.0
 nbformat==5.11.1
 nbclient==0.11.0
