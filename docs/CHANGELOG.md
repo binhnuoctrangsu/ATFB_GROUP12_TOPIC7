@@ -73,3 +73,17 @@ All significant architectural, methodological, data-validation, and editorial ch
   - Executed all 58 cells (28 code cells) top-to-bottom with 0 errors.
 - `src/data.py`: Added fast connectivity check `_network_available()` and offline fallback to `rebuild_processed_from_raw()` so notebook and grading runs execute seamlessly both online and in isolated/offline environments.
 - `src/update_notebook.py` and `src/check_report_numbers.py`: Automated notebook updater/executor and cross-artifact consistency verifier.
+
+
+---
+
+## [Phase 5] — 2026-11-13 — Academic Report Build (`.docx` & `.pdf`) and Page/Number Verification
+
+### Added / Updated
+- `src/build_report.py` and `report/ATFB_Essay_Group12.docx`:
+  - Built `report/ATFB_Essay_Group12.docx` directly from `report/report_template.docx` (preserving `report/report_template.docx` unmodified), keeping A4 dimensions, 2.5 cm margins, 12 pt Times New Roman body text at 1.5 line spacing, `<w:keepNext/>` on headings/captions, and `<w:cantSplit/>` on table rows.
+  - Populated Title Page (with `Group: 12` and `[TODO: Fill in manually before submission]` member table), Abstract (**192 words** $\le 200$), `1. Introduction`, `2. Data`, `3. Exploratory data analysis`, `4. Methodology`, `5. Results` (§5.1–§5.5), `6. Conclusion`, `References` (with explicit textbook `TODO`), `Appendix A. Contribution of each member` (`TODO` table), `Appendix B. Use of generative AI`, and `Appendix C. Reproducibility and data manifest`.
+  - Embedded 6 numbered figures (`Figure 1`–`Figure 6`) and 8 numbered summary tables (`Table 1`–`Table 8`) synthesizing `tab01`–`tab33`.
+- `report/ATFB_Essay_Group12.pdf` (gitignored per `.gitignore`):
+  - Exported via Microsoft Word COM automation and verified via `pypdf` in `src/check_report_numbers.py`: 20 total pages (Title Page = p. 1; Main text from Abstract to Section 6 Conclusion = pp. 2–16, i.e. **15 pages** $\le 15$; References = pp. 17–18; Appendices A–C = pp. 19–20).
+- `docs/requirements_checklist.md`: Updated all format, content, and verification items to `verified` (with explicit `TODO (manual)` for group members and assigned textbook).

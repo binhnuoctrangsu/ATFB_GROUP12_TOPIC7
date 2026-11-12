@@ -156,8 +156,9 @@ def check_docx(docx_path: Path) -> dict:
         "1.29%",       # FEVD h=20 dUS10Y
         "51.99",       # Johansen trace r=0
         "26.29",       # Johansen max-eig r=0
-        "-5.68",       # VECM beta USDVND (-5.6806)
-        "-1.05",       # VECM beta OIL (-1.0452)
+        "-5.6806",     # VECM beta USDVND (-5.6806)
+        "-1.0452",     # VECM beta OIL (-1.0452)
+        "0.1915",      # VECM beta DGS10 (0.1915)
         "1.2448%",     # OOS RMSE VAR(AIC)
         "1.2290%",     # OOS RMSE AR(1)
         "1.2349%",     # OOS RMSE RW
@@ -195,6 +196,25 @@ def main():
         print("   PASS:", docx_summary)
     else:
         print(f"3. {docx_path.name} not yet generated (skipping docx check).")
+
+    pdf_path = ROOT / "report" / "ATFB_Essay_Group12.pdf"
+    if pdf_path.exists():
+        from pypdf import PdfReader
+        reader = PdfReader(str(pdf_path))
+        total_pages = len(reader.pages)
+        abs_page, ref_page = None, None
+        for idx, page in enumerate(reader.pages, start=1):
+            txt = page.extract_text() or ""
+            if abs_page is None and "Abstract" in txt:
+                abs_page = idx
+            if ref_page is None and "References" in txt and "1. Introduction" not in txt:
+                ref_page = idx
+        assert abs_page is not None and ref_page is not None, "Could not locate Abstract/References in PDF"
+        main_text_pages = ref_page - abs_page
+        assert main_text_pages <= 15, f"Main text is {main_text_pages} pages (exceeds <= 15 page limit)"
+        print(f"4. Checking PDF report {pdf_path.name}...")
+        print("   PASS:", {"total_pages": total_pages, "abstract_start_page": abs_page,
+                           "references_start_page": ref_page, "main_text_pages": main_text_pages})
 
     print("All consistency checks succeeded.")
 

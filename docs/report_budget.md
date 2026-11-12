@@ -28,3 +28,4 @@
 ## Conflict Resolution Note (Brief vs Prompt)
 1. **Appendix Ordering:** Per Brief §4 and `report_template.docx`, **Appendix A** is the member contribution table and **Appendix B** is the generative-AI statement. Reproducibility and data-manifest details are placed in **Appendix C** (after Appendices A and B) and in `README.md` / `docs/data_manifest.md`.
 2. **Main-Text Page Cap (≤ 15 pages):** Full literature annotations (`docs/literature_review.md`), full data validation logs (`docs/audit.md`), and the 24+ granular CSV outputs in `results/tables/` are synthesised into the 8 compact main-text tables above so the main text never exceeds 15 pages.
+

@@ -295,3 +295,4 @@ if __name__ == "__main__":
     print(f"[report_numbers] Verified {len(nums)} canonical statistics across tab01..tab33.")
     for k, v in list(nums.items())[:20]:
         print(f"  {k}: {v}")
+
