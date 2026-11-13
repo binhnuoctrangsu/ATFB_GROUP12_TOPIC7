@@ -3,7 +3,7 @@
 **Course:** Applied Technology in Finance and Banking (`NHAE408`), Foreign Trade University – HCMC Campus  
 **Instructors:** Dr. Lê Trung Thành, Dr. Nguyễn Thị Hoàng Anh  
 **Topic:** Topic 7 — *Macro-financial links: Vietnamese stock returns vs. USD/VND, US interest rates, and oil prices (VAR + cointegration)*  
-**Group:** `12` *(confirm/replace in `config.py`)* · **Members:** *TODO: fill in `config.MEMBERS`, the report Title Page, and Appendix A before submission*
+**Group:** `12` · **Members:** Hoàng Phương Linh (`2412345011`), Võ Như Ý (`2412345017`), Lê Khánh Mỹ Linh (`2412345040`), Trương Bảo Thư (`2412345083`)
 
 ---
 
@@ -101,6 +101,6 @@ Produces `D:\ANTIGRAVITY\GROUP\ATFB_Essay_Group12_code.zip` (containing code + `
 ## 4. Pre-Submission Manual Checklist for Group 12
 
 Before uploading `ATFB_Essay_Group12.pdf` and `ATFB_Essay_Group12_code.zip` to Microsoft Teams:
-1. **Group Members & IDs:** Fill in `config.MEMBERS` in `config.py`, the Title Page table in `report/ATFB_Essay_Group12.docx`, and the **Appendix A** contribution table in `report/ATFB_Essay_Group12.docx`.
-2. **Assigned Course Textbook Citation:** Replace the `[TODO: Insert assigned ATFB (NHAE408) course textbook citation...]` placeholder in `docs/references.md` and the `References` section of `report/ATFB_Essay_Group12.docx` with the exact textbook listed on the official course syllabus.
+1. **Appendix A Contribution Shares:** Group 12's four members (`Hoàng Phương Linh`, `Võ Như Ý`, `Lê Khánh Mỹ Linh`, `Trương Bảo Thư`) and student IDs are populated in `config.py`, the notebook header, the report Title Page, and Appendix A (with `25%` each as an initial equal placeholder). Review and adjust the task descriptions and percentage shares in **Appendix A** of `report/ATFB_Essay_Group12.docx` to reflect actual individual contributions before submission.
+2. **Assigned Course Textbook Citation:** Replace the `[TODO: Insert the assigned ATFB (NHAE408) course textbook citation...]` placeholder in `docs/references.md` and the `References` section of `report/ATFB_Essay_Group12.docx` with the exact textbook listed on the official course syllabus.
 3. **Review Conclusions Draft:** Review the Conclusions section in `notebooks/t7_macro_links.ipynb` (marked `DRAFT for group review: rewrite in own words before final submission`) and Section 6 of `report/ATFB_Essay_Group12.docx`, then re-export `report/ATFB_Essay_Group12.pdf`.

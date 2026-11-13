@@ -107,3 +107,18 @@ All significant architectural, methodological, data-validation, and editorial ch
 - Extracted `D:\ANTIGRAVITY\GROUP\ATFB_Essay_Group12_code.zip` into an isolated temporary directory, deleted `data/processed/` and `results/`, and ran `python run_all.py --offline`: rebuilt all processed data, all 33 CSV tables, all 10 PNG figures, `notebooks/t7_macro_links.ipynb`, and `report/ATFB_Essay_Group12.docx`, passing all 10 unit tests and `src/check_report_numbers.py` in `20.0s`.
 - Verified via `git ls-files` that zero files in `data/raw/`, `data/processed/`, `results/`, `*.pdf`, or `*.zip` are tracked in the git repository.
 - Pushed `main` branch to `https://github.com/binhnuoctrangsu/ATFB_GROUP12_TOPIC7` and verified `git ls-remote origin main` matches local `HEAD`.
+
+
+---
+
+## [Post-Phase 7 Cleanup & Professional Formatting Pass] — 2026-11-13
+
+### Updated
+- **Group 12 Metadata (`config.py`, `notebooks/t7_macro_links.ipynb`, `report/ATFB_Essay_Group12.docx`, `README.md`):**
+  - Populated `GROUP_NUMBER = "12"` and all four group members (`Hoàng Phương Linh` `2412345011`, `Võ Như Ý` `2412345017`, `Lê Khánh Mỹ Linh` `2412345040`, `Trương Bảo Thư` `2412345083`) in `config.py`, the notebook header cell, the report Title Page table, and the Appendix A contribution table (initialised at `25%` each with an explicit `TODO` note to adjust task descriptions and shares before submission).
+- **Trimmed Over-Built Sections & Restored Readable Academic Formatting (`src/build_report.py`, `src/update_notebook.py`):**
+  - Moved auxiliary tables (Student-$t$ GARCH/GJR-GARCH, Rademacher wild bootstrap, 12-pair Bonferroni/Holm grid, Pesaran–Shin GIRFs, fixed-lag VAR(1)/VAR(2)/VAR(5) OOS grid, and 4-way subsample splits) out of the report body and into `results/tables/` only, retaining concise robustness checks on provider-gap exclusion, Newey–West HAC standard errors, reversed Cholesky ordering, and VN-Index alone.
+  - Restored readable `9.5–11 pt` (`10 pt` default) fonts across all report tables with at most 6–7 columns per table, standard single-figure-per-position sizing (`Figures 1–6`), uniform decimal precision, uniform terminology (`the VN composite index`, `VN-Index`, `HNX-Index`, `the USD/VND exchange rate`, `the US 10-year Treasury yield`, `Brent crude oil`), and measured academic prose across both the report and the notebook.
+  - Reduced the rendered PDF to **18 total pages** with **13 pages of main text** (pp. 2–14, well within the $\le 15$-page limit).
+- **Aligned References 1-for-1 (`docs/references.md`, `src/build_report.py`):**
+  - Corrected the Section 3 header in `docs/references.md` to `"21 Live-Verified Sources"` and aligned the report's `References` section 1-for-1 with `docs/references.md`.

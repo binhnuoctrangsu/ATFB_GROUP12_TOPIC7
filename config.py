@@ -4,10 +4,13 @@
 # All paths are relative to the repo root (ATFB_GROUP12_TOPIC7/).
 # Scripts and the notebook always call  os.chdir()  to the repo root first.
 
-# --------------- Group metadata (fill manually before submission) ---------------
-GROUP_NUMBER = "12"   # confirm/replace
+# --------------- Group metadata ---------------
+GROUP_NUMBER = "12"
 MEMBERS = [
-    # ("Full Name", "Student ID"),   # TODO: fill in manually before submission
+    ("Hoàng Phương Linh", "2412345011"),
+    ("Võ Như Ý", "2412345017"),
+    ("Lê Khánh Mỹ Linh", "2412345040"),
+    ("Trương Bảo Thư", "2412345083"),
 ]
 
 # --------------- Sample period ---------------

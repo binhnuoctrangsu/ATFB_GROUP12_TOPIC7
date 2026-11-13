@@ -23,7 +23,7 @@ All references cited in the report, notebook, and literature review were live-ve
 
 ---
 
-## 3. Peer-Reviewed Academic Literature (18 Live-Verified Sources)
+## 3. Peer-Reviewed Academic Literature (21 Live-Verified Sources)
 
 1. **Bollerslev, T. (1986).** Generalized autoregressive conditional heteroskedasticity. *Journal of Econometrics*, 31(3), 307–327. https://doi.org/10.1016/0304-4076(86)90063-1 (Verified: 2026-11-13).
 2. **Campbell, J. Y., & Thompson, S. B. (2008).** Predicting excess stock returns out of sample: Can anything beat the historical average? *The Review of Financial Studies*, 21(4), 1509–1531. https://doi.org/10.1093/rfs/hhm055 (Verified: 2026-11-13).

@@ -87,3 +87,4 @@ def build_submission_package() -> dict:
 
 if __name__ == "__main__":
     build_submission_package()
+
