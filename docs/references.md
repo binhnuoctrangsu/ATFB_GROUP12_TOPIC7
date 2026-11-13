@@ -4,22 +4,22 @@ All references cited in the report, notebook, and literature review were live-ve
 
 ---
 
-## 1. Course Textbook & Supplementary Text
+## 1. Course Textbook & Recommended Course Readings
 
-> **TODO (group to confirm before submission):** The ATFB Midterm Brief requires citing "the textbook" (Chapters 1–7) but does not state its author or title in `ATFB_Midterm_Brief.pdf` or `report_template.docx`. The course repository `README.md` refers to the "giáo trình ATFB" (assigned course textbook) and separately describes `chr_analysis.py` as "supplementary analysis following Christoffersen (2012)". Insert the exact citation of the assigned ATFB textbook from the course syllabus here before final submission.
+This course uses an in-house manuscript ('giáo trình ATFB') by Dr. Thành Lê (Foreign Trade University – Ho Chi Minh City Campus), distributed through the course repository (chapters 1-7, with accompanying code and data). Methods in this essay also draw on the course's recommended readings, cited individually below: Tsay (2010) for ARMA, unit roots and cointegration (Session 1-2); Sheppard (2021) for VAR, Granger causality and multivariate GARCH (Session 4); Christoffersen (2012) for volatility and risk measurement (Sessions 1, 3, 5).
 
-- **Supplementary course text (verified):**
-  Christoffersen, P. F. (2012). *Elements of Financial Risk Management* (2nd ed.). Academic Press (Elsevier). ISBN: 978-0-12-374448-7. Verified via publisher page: https://www.elsevier.com/books/elements-of-financial-risk-management/christoffersen/978-0-12-374448-7 (Accessed: 2026-11-13).
+- **Christoffersen, P. F. (2012).** *Elements of Financial Risk Management* (2nd ed.). Academic Press (Elsevier). ISBN: 978-0-12-374448-7. (Verified: 2026-11-13).
+- **Sheppard, K. (2021).** *Financial Econometrics Notes*. University of Oxford (`https://www.kevinsheppard.com/`). (Verified: 2026-11-13).
+- **Tsay, R. S. (2010).** *Analysis of Financial Time Series* (3rd ed.). John Wiley & Sons. ISBN: 978-0-470-41435-4. (Verified: 2026-11-13).
 
 ---
 
 ## 2. Course Materials & Adapted Code
 
-- **ATFB (NHAE408) Course Repository:** `Midterm/midterm_template.ipynb` (Midterm template notebook), `Midterm/report_template.docx` (Report template), and `Midterm/ATFB_Midterm_Brief.pdf`, provided by the course instructor. Adapted in this project:
-  - `src/eda.py::summarise` and `src/eda.py::_unit_root` adapt the template's `describe()` and `unit_root()` helpers (descriptive statistics with Jarque–Bera test; ADF and KPSS unit-root/stationarity tests).
-  - `src/eda.py::lb_arch_table` adapts the template's Ljung–Box and Engle ARCH-LM diagnostic table.
-  - `src/var_model.py` and `src/cointegration.py` adapt and extend the template's Stage 3b VAR (AIC lag selection, Granger causality, Cholesky IRF, FEVD) and cointegration/VECM workflow (Engle–Granger, Johansen trace/max-eigenvalue tests, VECM $\alpha/\beta$ and half-life).
-  - `src/forecast_eval.py` adapts the template's `rolling_forecasts()` fixed-window rolling re-estimation design and Diebold–Mariano evaluation.
+- **ATFB NHAE408 Course Repository, Foreign Trade University, 2026:** `Midterm/midterm_template.ipynb` (Midterm template notebook), `Midterm/report_template.docx` (Report template), and `Midterm/ATFB_Midterm_Brief.pdf` (`https://github.com/FTU-ATFB/ATFB.git`). Adapted in `notebooks/t7_macro_links.ipynb`:
+  - Stage 2 (`summarise`, `_unit_root`, `lb_arch_table`) adapts the template's `describe()` and `unit_root()` helpers (descriptive statistics with Jarque–Bera test; ADF and KPSS unit-root/stationarity tests; Ljung–Box and Engle ARCH-LM diagnostics).
+  - Stages 3–4 (`select_var_lag`, `granger_table`, `irf_plot`, `fevd_table`, `engle_granger_table`, `johansen_test`, `fit_vecm`) adapt and extend the template's Stage 3b VAR and cointegration/VECM workflow.
+  - Stage 5 (`rolling_var_forecast`, `rolling_ar1_forecast`, `diebold_mariano`) adapts the template's `rolling_forecasts()` fixed-window rolling re-estimation design and Diebold–Mariano evaluation.
 
 ---
 
@@ -75,7 +75,6 @@ All 10 checkpoint dates (20 index-close pairs) were live-verified on `2026-11-13
 
 ---
 
-## 5. Unverified / Excluded Candidate References
+## 5. Historical Note on Early Draft Placeholders (Resolved)
 
-- **Assigned ATFB Course Textbook (Identity Unverified — Flagged as `TODO`):** While `Christoffersen (2012)` is verified in the course repo as a supplementary reference, the exact title/author of the primary "giáo trình ATFB" could not be independently verified from `ATFB_Midterm_Brief.pdf` or `report_template.docx` alone and is therefore left as an explicit `TODO` placeholder rather than guessed.
 - **Early Draft Unverified 2016 Market-Cap Placeholder (`1,274,236` bn VND / `84,906` bn VND cited to "HOSE/HNX Annual Statistical Report 2016"):** Excluded and replaced in earlier commits with the live-verified end-May 2020 (`2020-05-29`) exchange report figures above (`3,010,000` bn VND and `199,800` bn VND).

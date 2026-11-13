@@ -3,7 +3,7 @@
 ## Formatting Parameters (`report_template.docx` & Brief §4)
 - **Paper size:** A4 (210 mm × 297 mm)
 - **Font:** 12 pt, 1.5 line spacing
-- **Main text cap:** **≤ 15 pages** (measured from `Abstract` through `6. Conclusion`, excluding the Title Page, `References`, and `Appendices A–C`).
+- **Main text cap:** **≤ 15 pages** (measured from `Abstract` through `6. Conclusion`, excluding the Title Page, `References`, and `Appendices A–B`).
 - **Abstract cap:** **≤ 200 words**.
 - **Visual density:** At 12 pt / 1.5 spacing, one full page of prose is ~360–400 words. Each embedded figure occupies ~0.35–0.45 pages; each formatted table occupies ~0.25–0.35 pages. To stay strictly within 13.5–14.5 pages (leaving a safety margin below 15.0 pages), the main text targets **~3,100–3,500 words** plus **6 figures** and **8 compact tables**, while pointing the reader to `notebooks/t7_macro_links.ipynb`, `docs/`, and `results/tables/` for full auxiliary tables.
 
@@ -23,9 +23,8 @@
 | **References** (verified APA citations, textbook `TODO`, template attribution) | ~450 | — | — | *(excluded: ~1.5)* |
 | **Appendix A. Contribution of each member** | ~50 | — | Contribution table (`TODO`) | *(excluded: ~0.5)* |
 | **Appendix B. Use of generative AI** | ~200 | — | AI tool & verification table | *(excluded: ~0.5)* |
-| **Appendix C. Reproducibility & Data Manifest** | ~250 | — | File/hash manifest summary | *(excluded: ~0.8)* |
 
 ## Conflict Resolution Note (Brief vs Prompt)
-1. **Appendix Ordering:** Per Brief §4 and `report_template.docx`, **Appendix A** is the member contribution table and **Appendix B** is the generative-AI statement. Reproducibility and data-manifest details are placed in **Appendix C** (after Appendices A and B) and in `README.md` / `docs/data_manifest.md`.
+1. **Appendix Structure:** Per Brief §4 and `report_template.docx`, the report includes only **Appendix A** (member contribution table) and **Appendix B** (generative-AI statement). Reproducibility and data-manifest details are folded concisely into Section 2 (Data) and documented in `README.md` / `docs/data_manifest.md`.
 2. **Main-Text Page Cap (≤ 15 pages):** Full literature annotations (`docs/literature_review.md`), full data validation logs (`docs/audit.md`), and the 24+ granular CSV outputs in `results/tables/` are synthesised into the 8 compact main-text tables above so the main text never exceeds 15 pages.
 

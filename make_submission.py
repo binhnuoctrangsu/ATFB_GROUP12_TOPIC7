@@ -2,10 +2,17 @@
 
 Creates:
   1. D:\\ANTIGRAVITY\\GROUP\\ATFB_Essay_Group12_code.zip
-     (containing code, notebooks, docs, report .docx, data/raw/*.csv, data/processed/*.csv,
-      and results/{tables,figures}/* so the archive runs start-to-finish offline or online)
+     Contains the consolidated single-notebook submission package:
+       - README.md
+       - requirements.txt
+       - config.py
+       - notebooks/t7_macro_links.ipynb
+       - docs/references.md
+       - report/ATFB_Essay_Group12.docx
+       - data/raw/{vnindex_raw,hnxindex_raw,usdvnd_raw,oil_raw,dgs10_raw}.csv
+       - data/processed/{panel,log_levels,alignment_report}.csv
   2. D:\\ANTIGRAVITY\\GROUP\\ATFB_Essay_Group12.pdf
-     (copied from report/ATFB_Essay_Group12.pdf)
+     (Copied from report/ATFB_Essay_Group12.pdf for the separate PDF upload on Teams)
 """
 
 import hashlib
@@ -30,33 +37,28 @@ def build_submission_package() -> dict:
     pdf_src = ROOT / "report" / "ATFB_Essay_Group12.pdf"
     pdf_dst = OUT_DIR / "ATFB_Essay_Group12.pdf"
 
-    include_patterns = [
+    explicit_files = [
         "README.md",
         "requirements.txt",
         "config.py",
-        "run_all.py",
-        "make_submission.py",
-        ".gitignore",
-        "src/*.py",
-        "tests/*.py",
         "notebooks/t7_macro_links.ipynb",
-        "docs/*.md",
-        "report/report_template.docx",
+        "docs/references.md",
         "report/ATFB_Essay_Group12.docx",
-        "data/raw/*.csv",
-        "data/processed/*.csv",
-        "results/tables/*.csv",
-        "results/figures/*.png",
+        "data/raw/vnindex_raw.csv",
+        "data/raw/hnxindex_raw.csv",
+        "data/raw/usdvnd_raw.csv",
+        "data/raw/oil_raw.csv",
+        "data/raw/dgs10_raw.csv",
+        "data/processed/panel.csv",
+        "data/processed/log_levels.csv",
+        "data/processed/alignment_report.csv",
     ]
 
     files_to_pack: list[Path] = []
-    for pat in include_patterns:
-        matched = sorted(ROOT.glob(pat))
-        for p in matched:
-            if p.is_file() and "__pycache__" not in p.parts:
-                files_to_pack.append(p)
-
-    assert len(files_to_pack) >= 70, f"Expected >= 70 files to pack, found {len(files_to_pack)}"
+    for rel_str in explicit_files:
+        p = ROOT / rel_str
+        assert p.is_file(), f"Missing required submission file: {p}"
+        files_to_pack.append(p)
 
     with zipfile.ZipFile(zip_path, "w", compression=zipfile.ZIP_DEFLATED) as zf:
         for fpath in files_to_pack:
@@ -87,4 +89,3 @@ def build_submission_package() -> dict:
 
 if __name__ == "__main__":
     build_submission_package()
-
