@@ -17,11 +17,11 @@
 | **2. Data** (sources, sample window, composite index construction & weights, calendar alignment, cleaning & validation checks) | 550–650 | Fig 1 (Composite vs VN-Index) | Table 1 (Data sources, alignment & sample summary) | 2.2 |
 | **3. Exploratory Data Analysis** (levels/returns, summary stats, normality, unit roots, ACF/ARCH-LM, stylized facts) | 450–550 | Fig 2 (Levels & returns), Fig 3 (Q-Q & ACF combined/paired) | Table 2 (Summary stats, JB, Ljung–Box, ARCH-LM), Table 3 (ADF & KPSS unit-root tests) | 2.5 |
 | **4. Methodology** (VAR, Cholesky vs GIRF, Granger & HAC/bootstrap, EG & Johansen, VECM, rolling OOS evaluation & DM/CW tests) | 500–600 | — | — | 1.5 |
-| **5. Results** (VAR lag selection, Granger causality, IRF & FEVD, Cointegration & VECM, OOS forecast evaluation, Robustness: lags/gaps/HAC/ordering/VN-Index back to 2016/subsamples) | 850–1,000 | Fig 4 (Orthogonalised IRF & GIRF), Fig 5 (VECM ECT), Fig 6 (OOS Forecast Comparison) | Table 4 (Granger causality & robustness battery), Table 5 (FEVD & ordering sensitivity), Table 6 (Cointegration & VECM $\alpha, \beta$), Table 7 (OOS Forecast RMSE, MAE, OOS $R^2$, DA, DM), Table 8 (Extended VN-Index 2016–2026 & subsample stability) | 4.8 |
-| **6. Conclusion** (direct answer, bank/investor risk & hedging implications, 6 key limitations, next steps) | 350–450 | — | — | 1.0 |
-| **Main Text Total (Abstract – Section 6)** | **~3,360–4,040** | **6 Figures** | **8 Tables** | **~14.0 pages (≤ 15.0)** |
-| **References** (verified APA citations, textbook `TODO`, template attribution) | ~450 | — | — | *(excluded: ~1.5)* |
-| **Appendix A. Contribution of each member** | ~50 | — | Contribution table (`TODO`) | *(excluded: ~0.5)* |
+| **5. Results** (VAR lag selection, Granger causality, IRF & FEVD, Cointegration & VECM, OOS forecast evaluation, Robustness: lags/gaps/HAC/ordering/VN-Index alone) | 850–1,000 | Fig 5 (Orthogonalised IRF), Fig 6 (OOS Forecast Comparison) | Table 4 (Granger causality & IRF), Table 5 (FEVD & ordering sensitivity), Table 6 (Cointegration & VECM $\alpha, \beta$), Table 7 (OOS Forecast RMSE, MAE, OOS $R^2$, DM), Table 8 (Robustness: VN Composite vs. VN-Index Alone) | 4.8 |
+| **6. Conclusion** (direct answer, bank/investor risk & hedging implications, 4 key limitations, next steps) | 350–450 | — | — | 1.0 |
+| **Main Text Total (Abstract – Section 6)** | **~3,360–4,040** | **6 Figures** | **8 Tables** | **~13.0 pages (≤ 15.0)** |
+| **References** (verified APA citations, in-house textbook manuscript & recommended readings, template attribution) | ~450 | — | — | *(excluded: ~2.0)* |
+| **Appendix A. Contribution of each member** | ~50 | — | Contribution table (25% placeholder `TODO`) | *(excluded: ~0.5)* |
 | **Appendix B. Use of generative AI** | ~200 | — | AI tool & verification table | *(excluded: ~0.5)* |
 
 ## Conflict Resolution Note (Brief vs Prompt)

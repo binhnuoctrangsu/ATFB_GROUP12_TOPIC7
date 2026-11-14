@@ -25,7 +25,7 @@ All analysis is self-contained inside a single Jupyter notebook, **`notebooks/t7
 - **Stage 3 — Short-Run VAR Dynamics:** Lag selection (`AIC`, `HQIC`, `BIC`), `VAR(5)` estimation, Granger causality tests (with Newey–West HAC and provider-gap exclusion checks), orthogonalised impulse responses, forecast-error variance decomposition (`FEVD`), residual diagnostics, and Cholesky ordering sensitivity.
 - **Stage 4 — Long-Run Cointegration & VECM:** Pairwise Engle–Granger tests, joint four-variable Johansen trace and maximum-eigenvalue tests, rank-1 `VECM` estimation ($\beta$, $\alpha$, half-life of adjustment), and residual diagnostics.
 - **Stage 5 — Out-of-Sample Forecast Evaluation:** Rolling one-step-ahead forecasts (`W = 750` trading days, refitted every `20` trading days over `N_test = 500` out-of-sample trading days) comparing the `VAR` against a univariate `AR(1)` and a random walk using `RMSE`, `MAE`, out-of-sample $R^2_{\text{OOS}}$, and Diebold–Mariano tests.
-- **Stage 6 — Robustness (VN-Index Alone):** Full re-estimation replacing the VN composite index with HOSE's `VN-Index` alone (`2020–2026`, $N = 1,527$, plus an extended 10-year check back to November 2016, $N = 2,384$).
+- **Stage 6 — Robustness (VN-Index Alone):** Full re-estimation replacing the VN composite index with HOSE's `VN-Index` alone (`2020–2026`, $N = 1,527$).
 
 ---
 
