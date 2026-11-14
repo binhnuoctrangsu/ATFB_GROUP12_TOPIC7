@@ -1,6 +1,7 @@
-# ATFB (NHAE408) Midterm Essay — Topic 7: Macro-Financial Links (Group 12)
+# ATFB (Course Code: ML172 / NHAE408) Midterm Essay — Topic 7: Macro-Financial Links (Group 12)
 
 **Course:** Applied Technology in Finance and Banking (`NHAE408`), Foreign Trade University – HCMC Campus  
+**Course Code:** ML172  
 **Instructor:** Dr. Lê Trung Thành  
 **Topic:** Topic 7 — *Macro-financial links: Vietnamese stock returns vs. USD/VND, US interest rates, and oil prices (VAR + cointegration)*  
 **Group:** `12`  
@@ -47,8 +48,8 @@ ATFB_GROUP12_TOPIC7/
 │   ├── raw/                        # Raw CSV pulls (vnindex, hnxindex, usdvnd, oil, dgs10)
 │   └── processed/                  # Aligned dataset (panel.csv, log_levels.csv, alignment_report.csv)
 └── results/                        # Gitignored (generated automatically when running the notebook)
-    ├── figures/                    # PNG figures (fig01..fig08)
-    └── tables/                     # CSV tables (tab01..tab25)
+    ├── figures/                    # PNG figures (8 files: fig01..fig08)
+    └── tables/                     # CSV tables (26 files: tab01..tab25, plus tab08b)
 ```
 
 ---

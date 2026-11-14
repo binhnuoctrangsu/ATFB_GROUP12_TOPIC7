@@ -119,6 +119,20 @@ All significant architectural, methodological, data-validation, and editorial ch
 - **Trimmed Over-Built Sections & Restored Readable Academic Formatting (`src/build_report.py`, `src/update_notebook.py`):**
   - Moved auxiliary tables (Student-$t$ GARCH/GJR-GARCH, Rademacher wild bootstrap, 12-pair Bonferroni/Holm grid, Pesaran–Shin GIRFs, fixed-lag VAR(1)/VAR(2)/VAR(5) OOS grid, and 4-way subsample splits) out of the report body and into `results/tables/` only, retaining concise robustness checks on provider-gap exclusion, Newey–West HAC standard errors, reversed Cholesky ordering, and VN-Index alone.
   - Restored readable `9.5–11 pt` (`10 pt` default) fonts across all report tables with at most 6–7 columns per table, standard single-figure-per-position sizing (`Figures 1–6`), uniform decimal precision, uniform terminology (`the VN composite index`, `VN-Index`, `HNX-Index`, `the USD/VND exchange rate`, `the US 10-year Treasury yield`, `Brent crude oil`), and measured academic prose across both the report and the notebook.
-  - Reduced the rendered PDF to **18 total pages** with **13 pages of main text** (pp. 2–14, well within the $\le 15$-page limit).
-- **Aligned References 1-for-1 (`docs/references.md`, `src/build_report.py`):**
+  - Reduced the rendered PDF to **18 total pages** with **14 pages of main text** (pp. 2–15, within the $\le 15$-page limit).
+### Aligned References 1-for-1 (`docs/references.md`, `src/build_report.py`)
   - Corrected the Section 3 header in `docs/references.md` to `"21 Live-Verified Sources"` and aligned the report's `References` section 1-for-1 with `docs/references.md`.
+
+---
+
+## [Final Consolidation & Independent Audit Pass] — 2026-11-14
+
+### Updated
+- **Self-Contained Consolidated Notebook (`notebooks/t7_macro_links.ipynb`):**
+  - Inlined all data, EDA, VAR, cointegration/VECM, out-of-sample forecast evaluation, and plotting functions directly into `notebooks/t7_macro_links.ipynb` (`48` cells, `23` code cells) and retired the external `src/` helper package so the project runs end-to-end from a single notebook and the 5 core raw CSVs in `data/raw/`.
+  - Generated all `26` CSV tables (`tab01`–`tab25` plus `tab08b_granger_robustness.csv`) and `8` PNG figures (`fig01`–`fig08`) directly from the notebook.
+  - Updated Cell 11 return correlation (`0.9989`), log-level correlation (`0.9978`), and mean absolute daily return difference (`0.0410` pp) to match Cell 10 and Report Section 2; clarified system vs. single-equation degrees of freedom in Granger causality tests (`df = 5, 6004` vs. `5, 1501`) and provider-gap exclusion effective sample size ($T_{\text{eff}} = 1,467$); added the joint weak-exogeneity Wald test ($\chi^2(3) = 1.75, p = 0.6249$) in Stage 4; replaced `curr.rglob('*')` with `curr.iterdir()` in Cell 1; and removed draft banners.
+- **Programmatic Report Build & PDF Re-Export (`report/ATFB_Essay_Group12.docx`, `report/ATFB_Essay_Group12.pdf`, `docs/references.md`):**
+  - Rebuilt `report/ATFB_Essay_Group12.docx` programmatically from the generated CSV tables so every empirical value and all 161 table cells match `results/tables/*.csv` exactly, and re-exported `report/ATFB_Essay_Group12.pdf`.
+  - Trimmed the Abstract to 170 words ($\le 200$ words under every word counter) and finalised Appendix A task descriptions.
+  - Corrected Reference #16 (Nguyen & Bhatti, 2012) DOI to `https://doi.org/10.1016/j.intfin.2012.03.004` and Reference #3 (Diebold & Mariano, 1995) primary DOI to `https://doi.org/10.1080/07350015.1995.10524599` across `docs/references.md` and the report.

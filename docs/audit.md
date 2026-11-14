@@ -1,6 +1,6 @@
 # Phase 1 — Codebase Audit, Independent Data Validation & Series Quality Diagnostics
 
-*Audit date:* `2026-11-13`  
+*Audit date:* `2026-11-13` (Updated `2026-11-14`: all `src/*.py` modules audited below were subsequently inlined into the single self-contained notebook `notebooks/t7_macro_links.ipynb`, which generates `tab01`–`tab25` and `tab08b` directly.)  
 *Target repository:* `D:\ANTIGRAVITY\GROUP\WORKSPACE\ATFB_GROUP12_TOPIC7`  
 *Baseline commit audited:* `0e25a47` (`Complete Stages 2-7 in notebook, verify end-to-end execution, and add empirical results summary to references.md`)
 

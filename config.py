@@ -5,6 +5,7 @@
 # Scripts and the notebook always call  os.chdir()  to the repo root first.
 
 # --------------- Group metadata ---------------
+CLASS_CODE = "ML172"
 GROUP_NUMBER = "12"
 MEMBERS = [
     ("Hoàng Phương Linh", "2412345011"),

@@ -1,4 +1,4 @@
-# References — ATFB Group 12, Topic 7 (`docs/references.md`)
+# References — ATFB (NHAE408 – Class ML172) Group 12, Topic 7 (`docs/references.md`)
 
 All references cited in the report, notebook, and literature review were live-verified on `2026-11-13` via DOI resolver (`https://doi.org/`), JSTOR, Crossref, or RePEc/IDEAS. Consistent APA 7th edition formatting is used throughout.
 
@@ -27,7 +27,7 @@ This course uses an in-house manuscript ('giáo trình ATFB') by Dr. Thành Lê 
 
 1. **Bollerslev, T. (1986).** Generalized autoregressive conditional heteroskedasticity. *Journal of Econometrics*, 31(3), 307–327. https://doi.org/10.1016/0304-4076(86)90063-1 (Verified: 2026-11-13).
 2. **Campbell, J. Y., & Thompson, S. B. (2008).** Predicting excess stock returns out of sample: Can anything beat the historical average? *The Review of Financial Studies*, 21(4), 1509–1531. https://doi.org/10.1093/rfs/hhm055 (Verified: 2026-11-13).
-3. **Diebold, F. X., & Mariano, R. S. (1995).** Comparing predictive accuracy. *Journal of Business & Economic Statistics*, 13(3), 253–263. (Reprinted 2002 in *Journal of Business & Economic Statistics*, 20(1), 134–144, https://doi.org/10.1198/073500102753410444; RePEc: https://ideas.repec.org/a/bes/jnlbes/v13y1995i3p253-63.html; Verified: 2026-11-13).
+3. **Diebold, F. X., & Mariano, R. S. (1995).** Comparing predictive accuracy. *Journal of Business & Economic Statistics*, 13(3), 253–263. https://doi.org/10.1080/07350015.1995.10524599 (Reprinted 2002 in *Journal of Business & Economic Statistics*, 20(1), 134–144, https://doi.org/10.1198/073500102753410444; Verified: 2026-11-14).
 4. **Dornbusch, R., & Fischer, S. (1980).** Exchange rates and the current account. *The American Economic Review*, 70(5), 960–971. Stable URL: https://www.jstor.org/stable/1805775 (RePEc: https://ideas.repec.org/a/aea/aecrev/v70y1980i5p960-71.html; Verified: 2026-11-13).
 5. **Engle, R. F., & Granger, C. W. J. (1987).** Co-integration and error correction: Representation, estimation, and testing. *Econometrica*, 55(2), 251–276. https://doi.org/10.2307/1913236 (Verified: 2026-11-13).
 6. **Giacomini, R., & White, H. (2006).** Tests of conditional predictive ability. *Econometrica*, 74(6), 1545–1578. https://doi.org/10.1111/j.1468-0262.2006.00718.x (Verified: 2026-11-13).
@@ -40,7 +40,7 @@ This course uses an in-house manuscript ('giáo trình ATFB') by Dr. Thành Lê 
 13. **MacKinnon, J. G. (2010).** Critical values for cointegration tests. *Queen's Economics Department Working Paper* No. 1227, Queen's University. RePEc: https://ideas.repec.org/p/qed/wpaper/1227.html (Verified: 2026-11-13).
 14. **Miranda-Agrippino, S., & Rey, H. (2020).** U.S. monetary policy and the global financial cycle. *The Review of Economic Studies*, 87(6), 2754–2776. https://doi.org/10.1093/restud/rdaa019 (Verified: 2026-11-13).
 15. **Narayan, P. K., & Narayan, S. (2010).** Modelling the impact of oil prices on Vietnam's stock prices. *Applied Energy*, 87(1), 356–361. https://doi.org/10.1016/j.apenergy.2009.05.037 (Verified: 2026-11-13).
-16. **Nguyen, C. C., & Bhatti, M. I. (2012).** Copula model dependency between oil prices and stock markets: Evidence from China and Vietnam. *Journal of International Financial Markets, Institutions and Money*, 22(4), 758–773. https://doi.org/10.1016/j.intfin.2012.05.008 (RePEc: https://ideas.repec.org/a/eee/intfin/v22y2012i4p758-773.html; Verified: 2026-11-13).
+16. **Nguyen, C. C., & Bhatti, M. I. (2012).** Copula model dependency between oil prices and stock markets: Evidence from China and Vietnam. *Journal of International Financial Markets, Institutions and Money*, 22(4), 758–773. https://doi.org/10.1016/j.intfin.2012.03.004 (RePEc: https://ideas.repec.org/a/eee/intfin/v22y2012i4p758-773.html; Verified: 2026-11-14).
 17. **Pesaran, H. H., & Shin, Y. (1998).** Generalized impulse response analysis in linear multivariate models. *Economics Letters*, 58(1), 17–29. https://doi.org/10.1016/S0165-1765(97)00214-0 (Verified: 2026-11-13).
 18. **Phylaktis, K., & Ravazzolo, F. (2005).** Stock prices and exchange rate dynamics. *Journal of International Money and Finance*, 24(7), 1031–1053. https://doi.org/10.1016/j.jimonfin.2005.08.001 (Verified: 2026-11-13).
 19. **Sadorsky, P. (1999).** Oil price shocks and stock market activity. *Energy Economics*, 21(5), 449–469. https://doi.org/10.1016/S0140-9883(99)00020-1 (Verified: 2026-11-13).
